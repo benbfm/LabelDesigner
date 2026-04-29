@@ -1,0 +1,2274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZPL Label Template Designer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  /* Duracell Light – copper brand palette */
+  --primary:#B4641E;--primary-h:#9A5419;--primary-p:#7D4315;--primary-l:#FFF3DC;--primary-c:#F5DEB3;
+  --surface:#FFFDF8;--surface-alt:#FFF8F0;--bg:#FFF5E6;
+  --border:#D2B48C;--text:#2C1A0E;--text2:#6E5035;--text3:#A58055;
+  --danger:#a4262c;--danger-h:#8e1b20;--success:#107c10;
+  --nav:48px;--lsb:220px;--rsb:262px;
+  --r:4px;--sh:0 1.6px 3.6px rgba(0,0,0,.13),0 .3px .9px rgba(0,0,0,.11);
+  --shl:0 6.4px 14.4px rgba(0,0,0,.13),0 1.2px 3.6px rgba(0,0,0,.11);
+}
+html,body{width:100%;height:100%;overflow:hidden;}
+body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;background:var(--bg);color:var(--text);}
+
+/* ── App shell ── */
+#app{width:100vw;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Nav ── */
+#nav{height:var(--nav);background:var(--primary);display:flex;align-items:center;padding:0 16px;gap:20px;flex-shrink:0;box-shadow:var(--sh);z-index:100;}
+.brand{color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.2px;}
+.brand svg{width:22px;height:22px;flex-shrink:0;}
+.nav-sep{width:1px;height:24px;background:rgba(255,255,255,.25);margin:0 4px;}
+.nav-btn{color:rgba(255,255,255,.85);background:none;border:none;padding:6px 14px;border-radius:var(--r);cursor:pointer;font-size:13px;font-family:inherit;transition:background .15s;display:flex;align-items:center;gap:6px;}
+.nav-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+.nav-btn.active{background:rgba(255,255,255,.22);color:#fff;font-weight:600;}
+.nav-spacer{flex:1;}
+.nav-version{color:rgba(255,255,255,.5);font-size:11px;}
+
+/* ── Screens ── */
+.screen{display:none;flex:1;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:var(--r);border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:background .15s;white-space:nowrap;line-height:1.4;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-h);}
+.btn-primary:active{background:var(--primary-p);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{background:var(--bg);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-danger:hover{background:var(--danger-h);}
+.btn-ghost{background:transparent;color:var(--primary);padding:4px 8px;font-weight:500;border:none;}
+.btn-ghost:hover{background:var(--primary-l);}
+.btn-sm{padding:4px 10px;font-size:12px;}
+.btn-xs{padding:2px 8px;font-size:11px;}
+
+/* ── Form ── */
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;}
+input[type=text],input[type=number],select,textarea{border:1px solid var(--border);border-radius:var(--r);padding:5px 8px;font-family:inherit;font-size:13px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(180,100,30,.15);}
+textarea{resize:none;}
+input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--primary);}
+.chk{display:flex;align-items:center;gap:7px;cursor:pointer;}
+.chk label{font-size:13px;font-weight:500;color:var(--text);cursor:pointer;text-transform:none;letter-spacing:0;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+
+/* ── Misc ── */
+.divider{height:1px;background:var(--border);margin:8px 0;}
+.badge{background:var(--primary);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;}
+.scr{overflow-y:auto;}
+.scr::-webkit-scrollbar{width:5px;}
+.scr::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:.5px;}
+
+/* ════════════════ HOME ════════════════ */
+#screen-home{flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:36px;}
+.home-hero{text-align:center;}
+.home-hero h1{font-size:26px;font-weight:700;margin-bottom:6px;}
+.home-hero p{font-size:14px;color:var(--text2);max-width:520px;}
+.home-cards{display:flex;gap:20px;}
+.hcard{width:210px;background:var(--surface);border-radius:10px;box-shadow:var(--sh);padding:28px 20px 22px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:box-shadow .2s,transform .15s;border:2px solid transparent;text-align:center;}
+.hcard:hover{box-shadow:var(--shl);transform:translateY(-3px);border-color:var(--primary-c);}
+.hcard-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;}
+.ic-blue{background:#FFF3DC;} .ic-green{background:#DFF6DD;} .ic-orange{background:#FFF4CE;}
+.hcard-title{font-weight:700;font-size:14px;}
+.hcard-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+.home-stats{display:flex;gap:24px;padding:14px 24px;background:var(--surface);border-radius:8px;box-shadow:var(--sh);}
+.stat-item{text-align:center;}
+.stat-val{font-size:22px;font-weight:700;color:var(--primary);}
+.stat-lbl{font-size:11px;color:var(--text2);}
+
+/* ════════════════ DESIGNER ════════════════ */
+#screen-designer{flex-direction:column;}
+#dsgn-toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;height:52px;}
+#tpl-name{font-size:15px;font-weight:600;padding:4px 8px;border:1px solid transparent;border-radius:var(--r);flex:1;max-width:320px;background:transparent;}
+#tpl-name:hover{border-color:var(--border);background:var(--surface);}
+#tpl-name:focus{border-color:var(--primary);background:var(--surface);}
+#dsgn-body{display:flex;flex:1;overflow:hidden;}
+
+/* Left sidebar */
+#dsgn-left{width:var(--lsb);background:var(--surface-alt);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;padding:0 10px;}
+/* Sidebar sections — each section owns its own internal spacing */
+.sb-sec{display:flex;flex-direction:column;gap:7px;padding:12px 0;flex-shrink:0;}
+.sb-sep{height:1px;background:var(--border);flex-shrink:0;margin:0 -10px;}
+#lbl-hint{font-size:11px;color:var(--text3);line-height:1.6;padding:2px 0;}
+.add-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:inherit;font-size:13px;color:var(--text);transition:all .15s;width:100%;font-weight:500;}
+.add-btn:hover{border-color:var(--primary);background:var(--primary-l);color:var(--primary);}
+.add-btn .eico{font-size:15px;width:22px;text-align:center;flex-shrink:0;}
+
+/* Center canvas */
+#dsgn-center{flex:1;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;}
+#canvas-zoom-bar{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 0;
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+#canvas-zoom-bar .zoom-btn{width:28px;height:28px;font-size:16px;font-weight:700;line-height:1;padding:0;
+  border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--bg);color:var(--text);}
+#canvas-zoom-bar .zoom-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+#zoom-pct{font-size:13px;font-weight:600;color:var(--text-muted);min-width:42px;text-align:center;}
+.zoom-divider{width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;}
+.undo-btn{width:28px;height:28px;font-size:14px;line-height:1;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--bg);color:var(--text);}
+.undo-btn:hover:not(:disabled){background:var(--primary);color:#fff;border-color:var(--primary);}
+.undo-btn:disabled{opacity:0.3;cursor:not-allowed;}
+#snap-btn.snap-on{background:var(--primary)!important;color:#fff!important;border-color:var(--primary)!important;}
+/* Alignment strip in props panel */
+.align-section{display:flex;flex-direction:column;gap:4px;}
+.align-section label{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.align-row{display:flex;gap:3px;}
+.align-btn{width:30px;height:28px;padding:0;font-size:15px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;line-height:1;}
+.align-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+/* Keyboard shortcut hint */
+#kbd-hint{font-size:10px;color:var(--text2);line-height:1.6;padding:6px 8px;background:var(--surface-alt);border-radius:6px;border:1px solid var(--border);}
+#canvas-area{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:auto;padding:20px;
+  background:radial-gradient(circle, #D4B896 1px, transparent 1px) 0 0/20px 20px;}
+#lbl-canvas{position:relative;background:#fff;box-shadow:0 2px 20px rgba(0,0,0,.22),0 0 0 1px rgba(0,0,0,.1);cursor:crosshair;flex-shrink:0;}
+
+/* Elements on canvas */
+.lelem{position:absolute;cursor:move;border:1.5px dashed rgba(180,100,30,.5);background:rgba(239,246,252,.55);user-select:none;display:flex;align-items:center;justify-content:center;min-width:16px;min-height:10px;transition:border-color .1s,background .1s;overflow:visible;}
+.lelem-txt{align-items:flex-start!important;justify-content:flex-start!important;padding:1px 3px;}
+.lelem:hover{border-color:rgba(180,100,30,.85);background:rgba(239,246,252,.75);}
+.lelem.sel{border:2px solid var(--primary);background:rgba(199,224,244,.45);}
+.lelem.sel::after{content:'';position:absolute;inset:-4px;border:2px solid var(--primary);border-radius:2px;pointer-events:none;}
+.resize-handle{position:absolute;width:8px;height:8px;background:var(--primary);border:1px solid #fff;border-radius:2px;right:-4px;bottom:-4px;cursor:se-resize;z-index:10;}
+.var-badge{position:absolute;top:-9px;right:0;background:var(--primary);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap;pointer-events:none;z-index:5;}
+.txt-prev{font-family:'Courier New',monospace;white-space:nowrap;overflow:hidden;padding:0;line-height:1.2;text-align:left;width:100%;}
+.bc-prev{display:flex;flex-direction:column;align-items:center;width:100%;height:100%;overflow:hidden;}
+.bc-bars{flex:1;width:100%;background:repeating-linear-gradient(90deg,#000 0,#000 2px,#fff 2px,#fff 4px,#000 4px,#000 5px,#fff 5px,#fff 8px);}
+.bc-label{font-size:8px;font-family:'Courier New',monospace;margin-top:1px;white-space:nowrap;overflow:hidden;max-width:100%;text-align:center;}
+.qr-prev{width:100%;height:100%;background:
+  linear-gradient(#000,#000) no-repeat 0 0/30% 30%,
+  linear-gradient(#000,#000) no-repeat 70% 0/30% 30%,
+  linear-gradient(#000,#000) no-repeat 0 70%/30% 30%,
+  repeating-linear-gradient(90deg,transparent 0,transparent 35%,#000 35%,#000 37%,transparent 37%,transparent 43%,#000 43%,#000 45%,transparent 45%) center/55% 55%,
+  #fff;}
+.box-prev{border:2px solid #000;width:100%;height:100%;}
+
+/* Element list */
+#elem-list-area{flex:1;min-height:0;background:var(--surface);border-top:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.list-hdr{padding:5px 12px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;background:var(--surface-alt);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+#elem-tbl-wrap{flex:1;overflow-y:auto;}
+#etbl{width:100%;border-collapse:collapse;font-size:12px;}
+#etbl th{background:var(--surface-alt);padding:4px 10px;text-align:left;font-weight:700;position:sticky;top:0;border-bottom:1px solid var(--border);color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
+#etbl td{padding:4px 10px;border-bottom:1px solid var(--border);}
+.seq-btns{display:flex;flex-direction:row;gap:2px;justify-content:center;align-items:center;}
+.seq-btn{padding:0 5px;font-size:10px;line-height:22px;height:22px;border:1px solid var(--border);border-radius:2px;background:var(--surface);cursor:pointer;color:var(--text2);}
+.seq-btn:hover:not(:disabled){background:var(--primary-l);color:var(--primary);}
+.seq-btn:disabled{opacity:.3;cursor:default;}
+#etbl tr.sel-row{background:var(--primary-l);}
+#etbl tr:hover{background:var(--bg);cursor:pointer;}
+#etbl tr.sel-row:hover{background:var(--primary-c);}
+
+/* Right properties */
+#dsgn-right{width:var(--rsb);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+#props-hdr{padding:10px 14px;background:var(--surface-alt);border-bottom:1px solid var(--border);font-weight:700;font-size:13px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+#props-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px;}
+#props-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;flex:1;color:var(--text2);font-size:13px;text-align:center;padding:20px;}
+#props-empty .big{font-size:36px;}
+#pform{display:flex;flex-direction:column;gap:9px;}
+
+/* Type badges */
+.tbadge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.t-TEXT{background:#E1DFDD;color:#323130;}
+.t-CODE128{background:#A9D18E;color:#1A4820;}
+.t-QRCODE{background:#9DC8E2;color:#083047;}
+.t-EAN13{background:#F4B8C1;color:#6A0808;}
+.t-UPCA{background:#FFD966;color:#3D2C00;}
+.t-BOX{background:#D2CBFF;color:#1B1045;}
+
+/* ════════════════ LIBRARY ════════════════ */
+#screen-library{flex-direction:column;padding:20px 24px;gap:16px;overflow:hidden;}
+.lib-hdr{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.lib-hdr h2{font-size:20px;font-weight:700;}
+.lib-acts{display:flex;gap:8px;}
+#search-box{width:260px;padding:6px 14px;border:1px solid var(--border);border-radius:20px;font-family:inherit;font-size:13px;}
+#search-box:focus{outline:none;border-color:var(--primary);}
+#tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:16px;overflow-y:auto;padding-right:4px;flex:1;}
+.tcard{background:var(--surface);border-radius:8px;box-shadow:var(--sh);padding:14px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--border);transition:box-shadow .2s;}
+.tcard:hover{box-shadow:var(--shl);}
+.tcard-prev{height:90px;background:var(--bg);border-radius:var(--r);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px dashed var(--border);}
+.tcard-name{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tcard-meta{font-size:11px;color:var(--text2);line-height:1.6;}
+.tcard-acts{display:flex;gap:5px;flex-wrap:wrap;}
+#lib-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text2);}
+#lib-empty h3{font-size:18px;font-weight:700;color:var(--text);}
+
+/* ════════════════ PRINT ════════════════ */
+#screen-print{flex-direction:column;padding:20px 24px;gap:16px;overflow:hidden;}
+.print-hdr{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.print-hdr h2{font-size:20px;font-weight:700;}
+#print-body{display:flex;gap:20px;flex:1;overflow:hidden;}
+#print-left{width:360px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+#print-right{flex:1;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.psec{background:var(--surface);border-radius:6px;box-shadow:var(--sh);padding:14px;display:flex;flex-direction:column;gap:10px;}
+.psec h3{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+#print-sel{font-size:14px;padding:8px 10px;}
+#var-wrap{display:flex;flex-direction:column;gap:10px;}
+#zpl-out-wrap{background:var(--surface);border-radius:6px;box-shadow:var(--sh);padding:14px;display:flex;flex-direction:column;gap:10px;min-height:220px;}
+.zpl-out-hdr{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.zpl-out-hdr h3{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.zpl-acts{display:flex;gap:6px;}
+#zpl-ta{height:200px;font-family:'Cascadia Code','Consolas',monospace;font-size:12px;background:#1e1e1e;color:#d4d4d4;padding:14px;border:none;border-radius:6px;resize:none;line-height:1.7;}
+.tpl-info-box{font-size:12px;color:var(--text2);background:var(--bg);padding:8px 10px;border-radius:var(--r);border-left:3px solid var(--primary);}
+/* DPI selector */
+.dpi-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+#dpi-sel{width:130px;font-size:14px;padding:6px 8px;}
+#dpi-hint{font-size:12px;color:var(--text2);line-height:1.6;}
+/* Labelary preview */
+#preview-wrap{background:var(--surface);border-radius:6px;box-shadow:var(--sh);padding:14px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;}
+.preview-hdr{display:flex;align-items:center;justify-content:space-between;}
+.preview-hdr h3{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.preview-hint{font-size:11px;color:var(--text3);}
+#preview-body{display:flex;align-items:center;justify-content:center;min-height:100px;border:1px solid var(--border);border-radius:4px;background:var(--bg);padding:8px;}
+#preview-img{max-width:100%;max-height:320px;border-radius:3px;display:block;}
+#preview-empty{color:var(--text3);font-size:13px;font-style:italic;text-align:center;padding:16px 0;}
+#preview-err{color:var(--danger);font-size:12px;font-style:italic;text-align:center;padding:12px 0;display:none;}
+/* Send to printer */
+#send-wrap{background:var(--surface);border-radius:6px;box-shadow:var(--sh);padding:14px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;}
+#send-wrap h3{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+#printer-url{font-size:13px;}
+#btn-send-printer{width:100%;justify-content:center;padding:11px;font-size:14px;background:#0078d4;border-radius:var(--r);}
+#btn-send-printer:hover{background:#006cbe;}
+#btn-send-printer:active{background:#005a9e;}
+#send-status{font-size:12px;min-height:18px;display:none;padding:6px 10px;border-radius:var(--r);}
+.send-ok{background:#dff6dd;color:#107c10;}
+.send-err{background:#fde7e9;color:#a4262c;}
+
+/* Toast */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--success);color:#fff;padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;box-shadow:var(--shl);}
+.toast.show{opacity:1;}
+
+/* ZPL Preview Modal */
+#zpl-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;}
+#zpl-modal-bg.open{display:flex;}
+#zpl-modal{background:var(--surface);border-radius:8px;box-shadow:var(--shl);width:700px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;}
+#zml-hdr{padding:14px 18px;background:var(--surface-alt);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+#zml-hdr h3{font-weight:700;}
+#zml-body{padding:16px;flex:1;overflow-y:auto;}
+#zml-code{font-family:'Cascadia Code','Consolas',monospace;font-size:12px;background:#1e1e1e;color:#d4d4d4;padding:14px;border-radius:6px;white-space:pre;overflow-x:auto;line-height:1.7;}
+#zml-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+
+/* Ruler tick marks on canvas */
+#lbl-canvas::before{content:'';position:absolute;inset:0;pointer-events:none;}
+
+/* ════════════════ SCAN & PRINT ════════════════ */
+#screen-scan{flex-direction:column;padding:20px 24px;gap:16px;overflow:hidden;}
+.scan-hdr{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.scan-hdr h2{font-size:20px;font-weight:700;}
+#scan-body{display:flex;gap:20px;flex:1;overflow:hidden;}
+#scan-left{width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+#scan-right{flex:1;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.ssec{background:var(--surface);border-radius:6px;box-shadow:var(--sh);padding:14px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;}
+.ssec h3{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+/* Camera viewfinder */
+#scan-video-wrap{position:relative;background:#1a1a1a;border-radius:6px;overflow:hidden;width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;}
+#scan-video{width:100%;height:100%;object-fit:cover;display:none;}
+#scan-placeholder{text-align:center;color:rgba(255,255,255,.75);font-size:13px;padding:16px;pointer-events:none;}
+#scan-finder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:58%;height:58%;border:2.5px solid rgba(255,200,0,.9);border-radius:4px;box-shadow:0 0 0 9999px rgba(0,0,0,.38);display:none;}
+#scan-finder::before,#scan-finder::after{content:'';position:absolute;width:16px;height:16px;border-color:var(--primary);border-style:solid;}
+#scan-finder::before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:2px 0 0 0;}
+#scan-finder::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 2px 0;}
+#scan-cam-status{font-size:11px;color:var(--text3);min-height:16px;line-height:1.5;}
+.no-barcode-api{background:#fde7e9;color:var(--danger);border-radius:4px;padding:8px 10px;font-size:12px;line-height:1.5;}
+/* Input row */
+.scan-input-row{display:flex;gap:8px;}
+.scan-input-row input{flex:1;}
+.orders-hint{font-size:11px;color:var(--text3);background:var(--bg);border-radius:4px;padding:8px 10px;line-height:1.6;}
+/* Status area */
+#scan-status-area{font-size:13px;min-height:20px;padding:4px 0;}
+.scan-idle{color:var(--text3);font-style:italic;}
+.scan-searching{color:#0078d4;font-weight:600;}
+.scan-found{color:var(--success);font-weight:600;}
+.scan-notfound{color:var(--danger);font-weight:600;}
+.scan-notpl{color:#c05000;font-weight:600;}
+/* Order card */
+#scan-order-card{background:var(--surface);border-radius:6px;box-shadow:var(--sh);padding:14px;border-left:3px solid var(--primary);flex-shrink:0;}
+#scan-order-card h4{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.order-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ofield{display:flex;flex-direction:column;gap:2px;}
+.ofield-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;}
+.ofield-val{font-size:13px;font-weight:600;color:var(--text);}
+/* Template banner */
+#scan-tpl-banner{background:var(--primary-l);border:1px solid var(--primary-c);border-radius:6px;padding:10px 14px;font-size:13px;font-weight:600;color:var(--primary-p);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+/* No template warning */
+#scan-notpl-warn{background:#fff4ce;border:1px solid #ffcd6b;border-radius:6px;padding:12px 14px;font-size:13px;color:#7a4600;flex-shrink:0;}
+/* Variable table */
+#scan-var-table{width:100%;border-collapse:collapse;font-size:13px;}
+#scan-var-table th{text-align:left;padding:5px 8px;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);background:var(--surface-alt);}
+#scan-var-table td{padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+#scan-var-table tr:last-child td{border-bottom:none;}
+#scan-var-table input{font-size:12px;padding:4px 6px;}
+/* Proceed button */
+#btn-scan-proceed{width:100%;justify-content:center;padding:12px;font-size:15px;}
+/* Linked SKU in designer toolbar */
+#tpl-linked-sku{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--r);width:150px;background:var(--surface);}
+#tpl-linked-sku:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 2px rgba(180,100,30,.15);}
+.sku-lbl{font-size:11px;color:rgba(255,255,255,.75);white-space:nowrap;}
+
+/* Import ZPL Modal */
+#import-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:600;align-items:center;justify-content:center;}
+#import-modal-bg.open{display:flex;}
+#import-modal{background:var(--surface);border-radius:8px;box-shadow:var(--shl);width:680px;display:flex;flex-direction:column;overflow:hidden;}
+#iml-hdr{padding:14px 18px;background:var(--primary);display:flex;align-items:center;justify-content:space-between;}
+#iml-hdr h3{font-weight:700;color:#fff;font-size:15px;}
+#iml-hdr .btn-ghost{color:rgba(255,255,255,.85);}
+#iml-hdr .btn-ghost:hover{background:rgba(255,255,255,.18);color:#fff;}
+#iml-hint{padding:10px 18px 4px;font-size:12px;color:var(--text2);line-height:1.6;background:var(--primary-l);border-bottom:1px solid var(--primary-c);}
+#iml-hint code{font-family:'Cascadia Code','Consolas',monospace;background:var(--primary-c);padding:1px 5px;border-radius:3px;font-size:11px;}
+#iml-body{padding:14px 18px;}
+#import-zpl-input{font-family:'Cascadia Code','Consolas',monospace;font-size:12px;background:#1e1e1e;color:#d4d4d4;border:none;border-radius:6px;padding:12px 14px;height:260px;resize:none;line-height:1.7;width:100%;outline:none;}
+#import-zpl-input:focus{box-shadow:0 0 0 2px var(--primary);}
+#iml-footer{padding:10px 18px 14px;display:flex;align-items:center;gap:10px;justify-content:flex-end;}
+#iml-parse-result{flex:1;font-size:12px;color:var(--text2);}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════════ NAV BAR ═══════════ -->
+<nav id="nav">
+  <div class="brand">
+    <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="8" height="8" rx="1.5" fill="white"/>
+      <rect x="12" y="2" width="8" height="8" rx="1.5" fill="rgba(255,255,255,.6)"/>
+      <rect x="2" y="12" width="8" height="8" rx="1.5" fill="rgba(255,255,255,.6)"/>
+      <rect x="12" y="12" width="8" height="8" rx="1.5" fill="rgba(255,255,255,.8)"/>
+    </svg>
+    ZPL Label Designer
+  </div>
+  <div class="nav-sep"></div>
+  <button class="nav-btn active" id="nav-home" onclick="nav('home')" data-i18n="nav.home">🏠 Home</button>
+  <button class="nav-btn" id="nav-designer" onclick="nav('designer')" data-i18n="nav.designer">✏️ Designer</button>
+  <button class="nav-btn" id="nav-library" onclick="nav('library')" data-i18n="nav.library">📂 Templates</button>
+  <button class="nav-btn" id="nav-print" onclick="nav('print')" data-i18n="nav.print">🖨️ Print</button>
+  <button class="nav-btn" id="nav-scan" onclick="nav('scan')" data-i18n="nav.scan">📷 Scan &amp; Print</button>
+  <div class="nav-spacer"></div>
+  <button class="nav-btn" id="lang-btn" onclick="toggleLang()" data-i18n="lang.toggle" style="border:1px solid rgba(255,255,255,.4);padding:4px 12px;font-size:12px;">ZH 中文</button>
+</nav>
+
+<!-- ═══════════ HOME ═══════════ -->
+<div id="screen-home" class="screen active">
+  <div class="home-hero">
+    <h1 data-i18n="home.title">ZPL Label Template Designer</h1>
+    <p data-i18n="home.desc">Design label templates visually, add text, barcodes &amp; shapes, define variables, then generate print-ready ZPL code instantly.</p>
+  </div>
+  <div class="home-cards">
+    <div class="hcard" onclick="nav('designer');newTpl();">
+      <div class="hcard-icon ic-blue">✏️</div>
+      <div class="hcard-title" data-i18n="home.card1.title">Design Template</div>
+      <div class="hcard-desc" data-i18n="home.card1.desc">Create a new label layout with text, barcodes, and shapes</div>
+    </div>
+    <div class="hcard" onclick="nav('library')">
+      <div class="hcard-icon ic-green">📂</div>
+      <div class="hcard-title" data-i18n="home.card2.title">My Templates</div>
+      <div class="hcard-desc" data-i18n="home.card2.desc">Browse, edit, duplicate or delete saved label templates</div>
+    </div>
+    <div class="hcard" onclick="nav('print')">
+      <div class="hcard-icon ic-orange">🖨️</div>
+      <div class="hcard-title" data-i18n="home.card3.title">Print Label</div>
+      <div class="hcard-desc" data-i18n="home.card3.desc">Load a template, fill variables, and export raw ZPL file</div>
+    </div>
+    <div class="hcard" onclick="nav('scan')">
+      <div class="hcard-icon" style="background:#EAF4FB;">📷</div>
+      <div class="hcard-title" data-i18n="home.card4.title">Scan &amp; Print</div>
+      <div class="hcard-desc" data-i18n="home.card4.desc">Scan an order barcode to auto-fill a template and print instantly</div>
+    </div>
+  </div>
+  <div class="home-stats">
+    <div class="stat-item"><div class="stat-val" id="stat-tpls">0</div><div class="stat-lbl" data-i18n="stat.tpls">Templates</div></div>
+    <div style="width:1px;background:var(--border);"></div>
+    <div class="stat-item"><div class="stat-val" id="stat-elems">0</div><div class="stat-lbl" data-i18n="stat.elems">Total Elements</div></div>
+    <div style="width:1px;background:var(--border);"></div>
+    <div class="stat-item"><div class="stat-val" id="stat-vars">0</div><div class="stat-lbl" data-i18n="stat.vars">Variable Fields</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ DESIGNER ═══════════ -->
+<div id="screen-designer" class="screen">
+  <!-- Toolbar -->
+  <div id="dsgn-toolbar">
+    <button class="btn btn-secondary btn-sm" onclick="nav('library')" data-i18n="dsgn.back">← Back</button>
+    <input id="tpl-name" type="text" value="Untitled Template" placeholder="Template name…" data-i18n-ph="tpl.placeholder" />
+    <div style="flex:1"></div>
+    <span class="sku-lbl" data-i18n="dsgn.sku">Linked SKU:</span>
+    <input id="tpl-linked-sku" type="text" placeholder="e.g. DUR-AA-4PK" data-i18n-ph="dsgn.sku.ph" title="Link this template to a SKU for Scan & Print">
+    <button class="btn btn-secondary btn-sm" onclick="openImportModal()" data-i18n="dsgn.import">↓ Import ZPL</button>
+    <button class="btn btn-secondary btn-sm" onclick="previewZPL()" data-i18n="dsgn.preview">👁 ZPL Preview</button>
+    <button class="btn btn-primary" onclick="saveTpl()" data-i18n="dsgn.save">💾 Save Template</button>
+  </div>
+
+  <div id="dsgn-body">
+    <!-- Left sidebar — three independent sections, each owns its own spacing -->
+    <div id="dsgn-left" class="scr">
+
+      <!-- ① Label Size section -->
+      <div class="sb-sec">
+        <div class="sec-title" data-i18n="lbl.size">Label Size (dots)</div>
+        <div class="fg">
+          <label data-i18n="lbl.preset">Preset Size</label>
+          <select id="size-preset" onchange="applyPreset(this.value)">
+            <option value="" data-i18n="lbl.custom">— Custom —</option>
+            <option value="812,406">4×2 in  (812×406)</option>
+            <option value="812,609">4×3 in  (812×609)</option>
+            <option value="812,812">4×4 in  (812×812)</option>
+            <option value="812,1218">4×6 in  (812×1218)</option>
+            <option value="1218,812">6×4 in  (1218×812)</option>
+            <option value="1218,406">6×2 in  (1218×406)</option>
+            <option value="406,203">2×1 in  (406×203)</option>
+            <option value="800,400">100×50 mm  (800×400)</option>
+            <option value="800,800">100×100 mm (800×800)</option>
+            <option value="800,1200">100×150 mm (800×1200)</option>
+          </select>
+        </div>
+        <div class="row2">
+          <div class="fg"><label data-i18n="lbl.width">Width</label><input type="number" id="lbl-w" value="600" min="50" max="2400" oninput="onSizeChange()"></div>
+          <div class="fg"><label data-i18n="lbl.height">Height</label><input type="number" id="lbl-h" value="400" min="50" max="2400" oninput="onSizeChange()"></div>
+        </div>
+        <div id="lbl-hint">203 DPI → 8 dots/mm<br>600×400 ≈ 75×50 mm</div>
+      </div>
+
+      <div class="sb-sep"></div>
+
+      <!-- ② Add Element section -->
+      <div class="sb-sec">
+        <div class="sec-title" data-i18n="add.elem">Add Element</div>
+        <button class="add-btn" onclick="addElem('TEXT')"><span class="eico">T</span> <span data-i18n="add.text">Text</span></button>
+        <button class="add-btn" onclick="addElem('CODE128')"><span class="eico">▐▌</span> <span data-i18n="add.c128">Code 128</span></button>
+        <button class="add-btn" onclick="addElem('QRCODE')"><span class="eico">⊞</span> <span data-i18n="add.qr">QR Code</span></button>
+        <button class="add-btn" onclick="addElem('EAN13')"><span class="eico">|||</span> <span data-i18n="add.ean">EAN-13</span></button>
+        <button class="add-btn" onclick="addElem('UPCA')"><span class="eico">|||</span> <span data-i18n="add.upc">UPC-A</span></button>
+        <button class="add-btn" onclick="addElem('BOX')"><span class="eico">□</span> <span data-i18n="add.box">Box / Line</span></button>
+      </div>
+
+      <div class="sb-sep"></div>
+
+      <!-- ③ Actions section -->
+      <div class="sb-sec">
+        <div class="sec-title" data-i18n="actions">Actions</div>
+        <button class="btn btn-secondary btn-sm" style="width:100%;justify-content:center;" onclick="dupSelected()" data-i18n="dup">⧉ Duplicate Selected</button>
+        <button class="btn btn-danger btn-sm" style="width:100%;justify-content:center;" onclick="clearAll()" data-i18n="clear">🗑 Clear All Elements</button>
+      </div>
+
+    </div>
+
+    <!-- Center: canvas + element list -->
+    <div id="dsgn-center">
+      <div id="canvas-zoom-bar">
+        <button class="undo-btn" id="undo-btn" onclick="undo()" title="Undo (Ctrl+Z)" disabled>↩</button>
+        <button class="undo-btn" id="redo-btn" onclick="redo()" title="Redo (Ctrl+Y)" disabled>↪</button>
+        <span class="zoom-divider"></span>
+        <button class="btn btn-ghost btn-xs zoom-btn" onclick="zoom(-0.25)" title="Zoom out (−)">−</button>
+        <span id="zoom-pct">100%</span>
+        <button class="btn btn-ghost btn-xs zoom-btn" onclick="zoom(0.25)" title="Zoom in (+)">+</button>
+        <button class="btn btn-ghost btn-xs zoom-btn" onclick="zoom(1-S.zoomAdj)" title="Reset zoom (1:1)" style="font-size:10px;width:36px;">1:1</button>
+        <span class="zoom-divider"></span>
+        <button class="btn btn-ghost btn-xs zoom-btn" id="snap-btn" onclick="toggleSnap()" title="Snap to 8-dot grid (G)" style="font-size:11px;width:52px;">⊞ Snap</button>
+      </div>
+      <div id="canvas-area">
+        <div id="lbl-canvas" onclick="canvasClick(event)"></div>
+      </div>
+      <!-- Element list -->
+      <div id="elem-list-area">
+        <div class="list-hdr">
+          <span><span data-i18n="elem.hdr">Elements</span> &nbsp;<span class="badge" id="ecnt">0</span></span>
+          <button class="btn btn-ghost btn-xs" id="del-list-btn" style="display:none" onclick="delSel()" data-i18n="del.btn">🗑 Delete</button>
+        </div>
+        <div id="elem-tbl-wrap">
+          <table id="etbl">
+            <thead><tr><th data-i18n="tbl.num">#</th><th data-i18n="tbl.type">Type</th><th data-i18n="tbl.content">Content / Variable</th><th data-i18n="tbl.pos">Position (X,Y)</th><th data-i18n="tbl.size">Size (W×H)</th><th data-i18n="tbl.ori">Orient.</th><th style="width:32px"></th></tr></thead>
+            <tbody id="etbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Properties -->
+    <div id="dsgn-right">
+      <div id="props-hdr">
+        <span data-i18n="props.hdr">Properties</span>
+        <button class="btn btn-danger btn-xs" id="props-del-btn" style="display:none" onclick="delSel()">🗑 Delete</button>
+      </div>
+      <div id="props-body" class="scr">
+        <div id="props-empty">
+          <span class="big">👆</span>
+          <span data-i18n="props.empty">Click an element on the canvas or in the list below to edit its properties.</span>
+        </div>
+        <div id="pform" style="display:none">
+          <div class="fg"><label data-i18n="p.type">Element Type</label><select id="p-type" onchange="changeType(this.value)"></select></div>
+          <div class="row2">
+            <div class="fg"><label data-i18n="p.x">X (dots)</label><input type="number" id="p-x" onchange="upd('x',+this.value)"></div>
+            <div class="fg"><label data-i18n="p.y">Y (dots)</label><input type="number" id="p-y" onchange="upd('y',+this.value)"></div>
+          </div>
+          <div class="align-section">
+            <label>Align on label</label>
+            <div class="align-row">
+              <button class="align-btn" onclick="alignElem('left')"    title="Align left edge">&#x21E4;</button>
+              <button class="align-btn" onclick="alignElem('hcenter')" title="Center horizontally">&#x2194;</button>
+              <button class="align-btn" onclick="alignElem('right')"   title="Align right edge">&#x21E5;</button>
+              <span style="width:6px"></span>
+              <button class="align-btn" onclick="alignElem('top')"     title="Align top edge">&#x21E1;</button>
+              <button class="align-btn" onclick="alignElem('vcenter')" title="Center vertically">&#x2195;</button>
+              <button class="align-btn" onclick="alignElem('bottom')"  title="Align bottom edge">&#x21E3;</button>
+            </div>
+          </div>
+          <div class="row2" id="pr-size">
+            <div class="fg"><label id="pl-w" data-i18n="p.w">Width (dots)</label><input type="number" id="p-w" onchange="upd('width',+this.value)"></div>
+            <div class="fg"><label id="pl-h" data-i18n="p.h">Height (dots)</label><input type="number" id="p-h" onchange="upd('height',+this.value)"></div>
+          </div>
+          <div class="row2" id="pr-font">
+            <div class="fg"><label data-i18n="p.fh">Font Height</label><input type="number" id="p-fh" min="8" onchange="upd('fontH',+this.value)"></div>
+            <div class="fg"><label data-i18n="p.fw">Font Width</label><input type="number" id="p-fw" min="8" onchange="upd('fontW',+this.value)"></div>
+          </div>
+          <div class="fg" id="pr-orient">
+            <label data-i18n="p.ori">Orientation</label>
+            <select id="p-ori" onchange="upd('orientation',this.value)">
+              <option value="N" data-i18n="ori.N">N — Normal</option>
+              <option value="R" data-i18n="ori.R">R — 90° Rotated</option>
+              <option value="I" data-i18n="ori.I">I — 180° Inverted</option>
+              <option value="B" data-i18n="ori.B">B — 270° Bottom-up</option>
+            </select>
+          </div>
+          <div class="fg" id="pr-thick" style="display:none">
+            <label data-i18n="p.thick">Border Thickness (dots)</label>
+            <input type="number" id="p-thick" min="1" onchange="upd('thickness',+this.value)">
+          </div>
+          <div class="fg" id="pr-mag" style="display:none">
+            <label data-i18n="p.mag">QR Magnification (1–10)</label>
+            <input type="number" id="p-mag" min="1" max="10" onchange="upd('magnification',+this.value)">
+          </div>
+          <div class="fg" id="pr-content">
+            <label data-i18n="p.content">Default Content / Value</label>
+            <input type="text" id="p-content" placeholder="Enter default value…" data-i18n-ph="p.content.ph" onchange="upd('content',this.value)">
+          </div>
+          <div class="divider"></div>
+          <div class="chk">
+            <input type="checkbox" id="p-isvar" onchange="toggleVar(this.checked)">
+            <label for="p-isvar" data-i18n="p.isvar">🔀 Mark as Variable (fill at print time)</label>
+          </div>
+          <div class="fg" id="pr-varname" style="display:none">
+            <label data-i18n="p.varname">Variable Name</label>
+            <input type="text" id="p-varname" placeholder="e.g. ProductName" data-i18n-ph="p.varname.ph" onchange="upd('variableName',this.value)">
+          </div>
+          <div id="kbd-hint">
+            <strong>Shortcuts</strong><br>
+            ⌫ Delete &nbsp;|&nbsp; Ctrl+D Duplicate<br>
+            ↑↓←→ Nudge 1pt &nbsp;|&nbsp; Shift+↑↓←→ 10pt<br>
+            Ctrl+Z Undo &nbsp;|&nbsp; Ctrl+Y Redo &nbsp;|&nbsp; G Snap
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ LIBRARY ═══════════ -->
+<div id="screen-library" class="screen">
+  <div class="lib-hdr">
+    <h2 data-i18n="lib.title">📂 Label Templates</h2>
+    <div class="lib-acts">
+      <input type="text" id="search-box" placeholder="🔍 Search…" data-i18n-ph="lib.search.ph" oninput="rLib()">
+      <button class="btn btn-primary" onclick="nav('designer');newTpl();">+ New Template</button>
+    </div>
+  </div>
+  <div id="tpl-grid"></div>
+  <div id="lib-empty" style="display:none">
+    <span style="font-size:52px">📋</span>
+    <h3 data-i18n="lib.empty.title">No templates saved yet</h3>
+    <p data-i18n="lib.empty.desc">Design your first label template to get started.</p>
+    <button class="btn btn-primary" onclick="nav('designer');newTpl();">+ New Template</button>
+  </div>
+</div>
+
+<!-- ═══════════ PRINT ═══════════ -->
+<div id="screen-print" class="screen">
+  <div class="print-hdr">
+    <h2 data-i18n="prt.title">🖨️ Print Label</h2>
+    <span style="font-size:12px;color:var(--text2);" data-i18n="prt.desc">Select a template → fill variables → generate ZPL → send to Zebra printer</span>
+  </div>
+  <div id="print-body">
+    <div id="print-left">
+      <div class="psec">
+        <h3 data-i18n="prt.step1">① Select Template</h3>
+        <select id="print-sel" onchange="loadPrintTpl()"><option value="" data-i18n="prt.choose">— Choose a template —</option></select>
+        <div id="tpl-info-box" class="tpl-info-box" style="display:none"></div>
+      </div>
+      <div class="psec">
+        <h3 data-i18n="prt.dpi.title">② Printer DPI</h3>
+        <div class="dpi-row">
+          <select id="dpi-sel" onchange="changeDPI()">
+            <option value="203">203 DPI</option>
+            <option value="300">300 DPI</option>
+            <option value="600">600 DPI</option>
+          </select>
+          <span id="dpi-hint"></span>
+        </div>
+      </div>
+      <div class="psec" style="flex:1;overflow-y:auto;">
+        <h3 data-i18n="prt.step2">③ Fill Variables</h3>
+        <div id="var-wrap" data-i18n-init="dyn.selFirst"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;padding:10px;" onclick="genZPL()" data-i18n="prt.gen">⚡ Generate ZPL</button>
+        <button class="btn btn-secondary" onclick="clearPrint()" title="Reset">↺</button>
+      </div>
+      <div id="send-wrap" class="psec">
+        <h3 data-i18n="prt.send.title">⑥ Send to Printer</h3>
+        <div class="fg">
+          <label data-i18n="prt.send.url">Printer URL / IP:Port</label>
+          <input type="text" id="printer-url" placeholder="http://192.168.1.100:9100" data-i18n-ph="prt.send.ph">
+        </div>
+        <button id="btn-send-printer" class="btn btn-primary" onclick="sendToPrinter()" data-i18n="prt.send.btn">🖨 Send Raw ZPL to Printer</button>
+        <div id="send-status"></div>
+      </div>
+    </div>
+    <div id="print-right">
+      <div id="zpl-out-wrap">
+        <div class="zpl-out-hdr">
+          <h3 data-i18n="prt.step3">④ ZPL Output</h3>
+          <div class="zpl-acts">
+            <button class="btn btn-secondary btn-sm" onclick="copyZPL()" data-i18n="prt.copy">📋 Copy</button>
+            <button class="btn btn-secondary btn-sm" onclick="dlZPL()" data-i18n="prt.dl">⬇ Download .ZPL</button>
+          </div>
+        </div>
+        <textarea id="zpl-ta" readonly placeholder="ZPL code appears here after clicking Generate ZPL…" data-i18n-ph="zpl.ph"></textarea>
+      </div>
+      <div id="preview-wrap">
+        <div class="preview-hdr">
+          <h3 data-i18n="prt.step4">⑤ Label Preview</h3>
+          <span class="preview-hint" data-i18n="prt.preview.hint">Powered by Labelary API</span>
+        </div>
+        <div id="preview-body">
+          <div id="preview-empty" data-i18n="prt.preview.empty">Generate ZPL to see a live preview…</div>
+          <img id="preview-img" style="display:none;" alt="Label Preview">
+          <div id="preview-err" data-i18n="prt.preview.err">Preview unavailable — check ZPL or network.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SCAN & PRINT ═══════════ -->
+<div id="screen-scan" class="screen">
+  <div class="scan-hdr">
+    <h2 data-i18n="scan.title">📷 Scan &amp; Print</h2>
+    <span style="font-size:12px;color:var(--text2);" data-i18n="scan.desc">Scan or type an order number → auto-fill template variables → print</span>
+  </div>
+  <div id="scan-body">
+
+    <!-- ── Left: input methods ── -->
+    <div id="scan-left">
+
+      <!-- Camera scanner -->
+      <div class="ssec">
+        <h3 data-i18n="scan.cam.title">① Camera Scanner</h3>
+        <div id="scan-video-wrap">
+          <video id="scan-video" autoplay playsinline muted></video>
+          <div id="scan-placeholder">
+            <div style="font-size:36px;margin-bottom:8px;">📷</div>
+            <span data-i18n="scan.cam.hint">Click Start Camera to scan a barcode</span>
+          </div>
+          <div id="scan-finder"></div>
+        </div>
+        <div id="scan-cam-status"></div>
+        <button class="btn btn-secondary btn-sm" id="scan-camera-btn" onclick="toggleCamera()" data-i18n="scan.cam.start">▶ Start Camera</button>
+        <div id="no-barcode-api" class="no-barcode-api" style="display:none;" data-i18n="scan.cam.noapi">BarcodeDetector not supported — use Chrome / Edge 90+ for camera scanning.</div>
+      </div>
+
+      <!-- Manual / USB scanner -->
+      <div class="ssec">
+        <h3 data-i18n="scan.usb.title">② Type / USB Scanner</h3>
+        <div class="scan-input-row">
+          <input type="text" id="scan-order-input"
+            placeholder="Order No. — e.g. ORD-001"
+            data-i18n-ph="scan.usb.ph"
+            onkeydown="if(event.key==='Enter')scanSearch()">
+          <button class="btn btn-primary btn-sm" onclick="scanSearch()" title="Search">🔍</button>
+        </div>
+        <div class="orders-hint" data-i18n="scan.usb.hint">Sample orders: ORD-001 · ORD-002 · ORD-003 · ORD-004 · ORD-005</div>
+      </div>
+
+      <!-- Status -->
+      <div id="scan-status-area" class="scan-idle">
+        <span data-i18n="scan.status.idle">Scan or enter an order number to begin.</span>
+      </div>
+    </div>
+
+    <!-- ── Right: order details + variable mapping ── -->
+    <div id="scan-right">
+
+      <!-- Order info card -->
+      <div id="scan-order-card" style="display:none;">
+        <h4 data-i18n="scan.order.hdr">Order Details</h4>
+        <div class="order-grid">
+          <div class="ofield"><div class="ofield-lbl" data-i18n="scan.f.ordernum">Order No.</div><div class="ofield-val" id="sf-ordernum">—</div></div>
+          <div class="ofield"><div class="ofield-lbl" data-i18n="scan.f.sku">SKU</div><div class="ofield-val" id="sf-sku">—</div></div>
+          <div class="ofield"><div class="ofield-lbl" data-i18n="scan.f.product">Product</div><div class="ofield-val" id="sf-product">—</div></div>
+          <div class="ofield"><div class="ofield-lbl" data-i18n="scan.f.qty">Quantity</div><div class="ofield-val" id="sf-qty">—</div></div>
+          <div class="ofield"><div class="ofield-lbl" data-i18n="scan.f.lot">Lot No.</div><div class="ofield-val" id="sf-lot">—</div></div>
+          <div class="ofield"><div class="ofield-lbl" data-i18n="scan.f.expiry">Expiry</div><div class="ofield-val" id="sf-expiry">—</div></div>
+          <div class="ofield" style="grid-column:1/-1;"><div class="ofield-lbl" data-i18n="scan.f.customer">Customer</div><div class="ofield-val" id="sf-customer">—</div></div>
+        </div>
+      </div>
+
+      <!-- Matched template banner -->
+      <div id="scan-tpl-banner" style="display:none;">
+        <span>📋</span><span id="scan-tpl-name"></span>
+      </div>
+
+      <!-- No template warning -->
+      <div id="scan-notpl-warn" style="display:none;">
+        <b>⚠️ </b><span data-i18n="scan.notpl">No template is linked to this SKU. Open the template in Designer and enter its SKU in the <b>Linked SKU</b> field in the toolbar.</span>
+      </div>
+
+      <!-- Variable mapping table -->
+      <div id="scan-vars-sec" class="ssec" style="display:none;">
+        <h3 data-i18n="scan.vars.title">③ Variable Mapping — edit values if needed</h3>
+        <table id="scan-var-table">
+          <thead>
+            <tr>
+              <th data-i18n="scan.vars.name">Variable</th>
+              <th data-i18n="scan.vars.type">Type</th>
+              <th data-i18n="scan.vars.value">Value</th>
+            </tr>
+          </thead>
+          <tbody id="scan-var-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Proceed button -->
+      <div id="scan-proceed-wrap" style="display:none;">
+        <button class="btn btn-primary" id="btn-scan-proceed" onclick="scanProceedToPrint()">
+          🖨️ <span data-i18n="scan.proceed">Proceed to Print →</span>
+        </button>
+      </div>
+
+    </div><!-- #scan-right -->
+  </div><!-- #scan-body -->
+</div><!-- #screen-scan -->
+
+</div><!-- #app -->
+
+<!-- Import ZPL Modal -->
+<div id="import-modal-bg">
+  <div id="import-modal">
+    <div id="iml-hdr">
+      <h3 data-i18n="imp.title">↓ Import from Raw ZPL Code</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeImportModal()" data-i18n="imp.close">✕ Close</button>
+    </div>
+    <div id="iml-hint">
+      Paste a full ZPL program. <code>^PW</code> / <code>^LL</code> set label size.
+      Each <code>^FO x,y</code> → <code>^A0</code> / <code>^BC</code> / <code>^BQ</code> / <code>^BE</code> / <code>^BU</code> / <code>^GB</code> → <code>^FD…^FS</code>
+      block becomes one designer element. Existing canvas elements will be replaced.
+    </div>
+    <div id="iml-body">
+      <textarea id="import-zpl-input" spellcheck="false"
+        placeholder="^XA&#10;^PW600&#10;^LL400&#10;^LH0,0&#10;^FO50,50&#10;^A0N,30,30&#10;^FDSample Text^FS&#10;^FO50,130&#10;^BY2,3,60&#10;^BCN,60,Y,N,N&#10;^FD12345678^FS&#10;^FO50,220&#10;^BQN,2,4&#10;^FDQA,https://example.com^FS&#10;^FO300,50&#10;^GB200,100,4,B,0&#10;^FS&#10;^XZ"></textarea>
+    </div>
+    <div id="iml-footer">
+      <span id="iml-parse-result"></span>
+      <button class="btn btn-secondary" onclick="closeImportModal()" data-i18n="imp.cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="doImportZPL()" data-i18n="imp.parse">Parse &amp; Import →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ZPL Preview Modal -->
+<div id="zpl-modal-bg">
+  <div id="zpl-modal">
+    <div id="zml-hdr">
+      <h3>ZPL Preview — Designer</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕ Close</button>
+    </div>
+    <div id="zml-body"><pre id="zml-code"></pre></div>
+    <div id="zml-footer">
+      <button class="btn btn-secondary" onclick="copyModalZPL()">📋 Copy ZPL</button>
+      <button class="btn btn-primary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT — all app logic
+═══════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ─── I18N ─────────────────────────────────────────────────────
+let lang = 'EN';
+
+const I18N = {
+  EN: {
+    'nav.home':'🏠 Home','nav.designer':'✏️ Designer',
+    'nav.library':'📂 Templates','nav.print':'🖨️ Print','nav.scan':'📷 Scan & Print',
+    'lang.toggle':'ZH 中文',
+    'home.title':'ZPL Label Template Designer',
+    'home.desc':'Design label templates visually, add text, barcodes &amp; shapes, define variables, then generate print-ready ZPL code instantly.',
+    'home.card1.title':'Design Template','home.card1.desc':'Create a new label layout with text, barcodes, and shapes',
+    'home.card2.title':'My Templates','home.card2.desc':'Browse, edit, duplicate or delete saved label templates',
+    'home.card3.title':'Print Label','home.card3.desc':'Load a template, fill variables, and export raw ZPL file',
+    'home.card4.title':'Scan & Print','home.card4.desc':'Scan an order barcode to auto-fill a template and print instantly',
+    'stat.tpls':'Templates','stat.elems':'Total Elements','stat.vars':'Variable Fields',
+    'dsgn.back':'← Back','tpl.placeholder':'Template name\u2026',
+    'dsgn.sku':'Linked SKU:','dsgn.sku.ph':'e.g. DUR-AA-4PK',
+    'dsgn.import':'↓ Import ZPL','dsgn.preview':'👁 ZPL Preview','dsgn.save':'💾 Save Template',
+    'lbl.size':'Label Size (dots)','lbl.width':'Width','lbl.height':'Height',
+    'lbl.dpi':'203 DPI → 8 dots/mm<br>600×400 ≈ 75×50 mm',
+    'add.elem':'Add Element','add.text':'Text','add.c128':'Code 128',
+    'add.qr':'QR Code','add.ean':'EAN-13','add.upc':'UPC-A','add.box':'Box / Line',
+    'actions':'Actions','dup':'⧉ Duplicate Selected','clear':'🗑 Clear All Elements',
+    'elem.hdr':'Elements','del.btn':'🗑 Delete',
+    'tbl.num':'#','tbl.type':'Type','tbl.content':'Content / Variable',
+    'tbl.pos':'Position (X,Y)','tbl.size':'Size (W×H)','tbl.ori':'Orient.',
+    'props.hdr':'Properties',
+    'props.empty':'Click an element on the canvas or in the list below to edit its properties.',
+    'p.type':'Element Type','p.x':'X (dots)','p.y':'Y (dots)',
+    'p.w':'Width (dots)','p.h':'Height (dots)',
+    'p.w.box':'Box Width','p.h.box':'Box Height','p.h.bar':'Bar Height',
+    'p.fh':'Font Height','p.fw':'Font Width','p.ori':'Orientation',
+    'ori.N':'N \u2014 Normal','ori.R':'R \u2014 90\u00b0 Rotated',
+    'ori.I':'I \u2014 180\u00b0 Inverted','ori.B':'B \u2014 270\u00b0 Bottom-up',
+    'p.thick':'Border Thickness (dots)','p.mag':'QR Magnification (1\u201310)',
+    'p.content':'Default Content / Value','p.content.ph':'Enter default value\u2026',
+    'p.isvar':'\ud83d\udd00 Mark as Variable (fill at print time)',
+    'p.varname':'Variable Name','p.varname.ph':'e.g. ProductName',
+    'lib.title':'\ud83d\udcc2 Label Templates','lib.search.ph':'\ud83d\udd0d Search\u2026',
+    'lib.empty.title':'No templates saved yet',
+    'lib.empty.desc':'Design your first label template to get started.',
+    'prt.title':'\ud83d\udda8\ufe0f Print Label',
+    'prt.desc':'Select a template \u2192 fill variables \u2192 generate ZPL \u2192 send to Zebra printer',
+    'prt.step1':'\u2460 Select Template','prt.choose':'\u2014 Choose a template \u2014',
+    'prt.dpi.title':'\u2461 Printer DPI',
+    'prt.step2':'\u2462 Fill Variables','prt.gen':'\u26a1 Generate ZPL',
+    'prt.step3':'\u2463 ZPL Output','prt.copy':'\ud83d\udccb Copy','prt.dl':'\u2b07 Download .ZPL',
+    'prt.step4':'\u2464 Label Preview',
+    'prt.preview.hint':'Powered by Labelary API',
+    'prt.preview.empty':'Generate ZPL to see a live preview\u2026',
+    'prt.preview.err':'Preview unavailable \u2014 check ZPL or network.',
+    'prt.send.title':'\u2465 Send to Printer',
+    'prt.send.url':'Printer URL / IP:Port',
+    'prt.send.ph':'http://192.168.1.100:9100',
+    'prt.send.btn':'\ud83d\udda8 Send Raw ZPL to Printer',
+    'prt.send.noZPL':'\u26a0 Generate ZPL first.',
+    'prt.send.noURL':'\u26a0 Enter a printer URL first.',
+    'prt.send.sending':'Sending\u2026',
+    'prt.send.ok':'\u2705 Sent successfully!',
+    'prt.send.err':'\u274c Could not reach printer. Check URL and network.',
+    'zpl.ph':'ZPL code appears here after clicking Generate ZPL\u2026',
+    'imp.title':'\u2193 Import from Raw ZPL Code','imp.close':'\u2715 Close',
+    'imp.cancel':'Cancel','imp.parse':'Parse &amp; Import \u2192',
+    'type.TEXT':'Text','type.CODE128':'Code 128','type.QRCODE':'QR Code',
+    'type.EAN13':'EAN-13','type.UPCA':'UPC-A','type.BOX':'Box',
+    'toast.saved':'\u2705 Template saved!','toast.deleted':'\ud83d\uddd1 Template deleted.',
+    'toast.dup':'\u29c9 Duplicated!','toast.selFirst':'Select an element first.',
+    'toast.copied':'\ud83d\udccb ZPL copied!','toast.clipbd':'\ud83d\udccb Copied to clipboard!',
+    'toast.dlzpl':'\u2b07 ZPL file downloaded!','toast.genZPL':'\u26a1 ZPL generated!',
+    'toast.noTpl':'\u26a0\ufe0f Please select a template first.',
+    'toast.noZPL':'\u26a0\ufe0f Generate ZPL first.',
+    'toast.imported':'\u2193 Imported {n} element from ZPL',
+    'toast.imported.pl':'\u2193 Imported {n} elements from ZPL',
+    'dyn.selFirst':'Select a template first.',
+    'dyn.pasteFirst':'\u26a0 Paste ZPL first.',
+    'dyn.noVar':'No variable fields in this template.<br>Click <b>Generate ZPL</b> directly.',
+    'confirm.delTpl':'Delete this template? This cannot be undone.',
+    'confirm.clearAll':'Remove all elements from canvas?',
+    // Scan & Print
+    'scan.title':'📷 Scan & Print','scan.desc':'Scan or type an order number → auto-fill template variables → print',
+    'scan.cam.title':'① Camera Scanner','scan.cam.hint':'Click Start Camera to scan a barcode',
+    'scan.cam.start':'▶ Start Camera','scan.cam.stop':'⏹ Stop Camera',
+    'scan.cam.noapi':'BarcodeDetector not supported — use Chrome / Edge 90+ for camera scanning.',
+    'scan.usb.title':'② Type / USB Scanner','scan.usb.ph':'Order No. — e.g. ORD-001',
+    'scan.usb.hint':'Sample orders: ORD-001 · ORD-002 · ORD-003 · ORD-004 · ORD-005',
+    'scan.status.idle':'Scan or enter an order number to begin.',
+    'scan.status.searching':'🔍 Searching…',
+    'scan.status.found':'✅ Order found — template matched!',
+    'scan.status.notfound':'❌ Order not found. Check the order number.',
+    'scan.status.notpl':'⚠️ Order found — no template linked to SKU:',
+    'scan.order.hdr':'Order Details',
+    'scan.f.ordernum':'Order No.','scan.f.sku':'SKU','scan.f.product':'Product',
+    'scan.f.qty':'Quantity','scan.f.lot':'Lot No.','scan.f.expiry':'Expiry','scan.f.customer':'Customer',
+    'scan.notpl':'No template linked to this SKU. Open the template in Designer and set its Linked SKU.',
+    'scan.vars.title':'③ Variable Mapping — edit values if needed',
+    'scan.vars.name':'Variable','scan.vars.type':'Type','scan.vars.value':'Value',
+    'scan.proceed':'Proceed to Print →',
+  },
+  ZH: {
+    'nav.home':'\ud83c\udfe0 \u9996\u9875','nav.designer':'\u270f\ufe0f \u8bbe\u8ba1\u5668',
+    'nav.library':'\ud83d\udcc2 \u6a21\u677f\u5e93','nav.print':'\ud83d\udda8\ufe0f \u6253\u5370',
+    'lang.toggle':'EN English',
+    'home.title':'ZPL \u6807\u7b7e\u6a21\u677f\u8bbe\u8ba1\u5668',
+    'home.desc':'\u53ef\u89c6\u5316\u8bbe\u8ba1\u6807\u7b7e\u6a21\u677f\uff0c\u6dfb\u52a0\u6587\u5b57\u3001\u6761\u7801\u548c\u5f62\u72b6\uff0c\u5b9a\u4e49\u53d8\u91cf\uff0c\u4e00\u952e\u751f\u6210\u6253\u5370\u5c31\u7eea\u7684 ZPL \u4ee3\u7801\u3002',
+    'home.card1.title':'\u8bbe\u8ba1\u6a21\u677f','home.card1.desc':'\u521b\u5efa\u5305\u542b\u6587\u5b57\u3001\u6761\u7801\u548c\u5f62\u72b6\u7684\u65b0\u6807\u7b7e\u5e03\u5c40',
+    'home.card2.title':'\u6211\u7684\u6a21\u677f','home.card2.desc':'\u6d4f\u89c8\u3001\u7f16\u8f91\u3001\u590d\u5236\u6216\u5220\u9664\u5df2\u4fdd\u5b58\u7684\u6807\u7b7e\u6a21\u677f',
+    'home.card3.title':'\u6253\u5370\u6807\u7b7e','home.card3.desc':'\u52a0\u8f7d\u6a21\u677f\uff0c\u586b\u5199\u53d8\u91cf\uff0c\u5bfc\u51fa\u539f\u59cb ZPL \u6587\u4ef6',
+    'stat.tpls':'\u6a21\u677f\u6570','stat.elems':'\u5143\u7d20\u603b\u6570','stat.vars':'\u53d8\u91cf\u5b57\u6bb5',
+    'dsgn.back':'\u2190 \u8fd4\u56de','tpl.placeholder':'\u6a21\u677f\u540d\u79f0\u2026',
+    'dsgn.import':'\u2193 \u5bfc\u5165 ZPL','dsgn.preview':'\ud83d\udc41 ZPL \u9884\u89c8','dsgn.save':'\ud83d\udcbe \u4fdd\u5b58\u6a21\u677f',
+    'lbl.size':'\u6807\u7b7e\u5c3a\u5bf8\uff08\u70b9\uff09','lbl.width':'\u5bbd\u5ea6','lbl.height':'\u9ad8\u5ea6',
+    'lbl.dpi':'203 DPI \u2192 8 \u70b9/\u6beb\u7c73<br>600\u00d7400 \u2248 75\u00d750 \u6beb\u7c73',
+    'add.elem':'\u6dfb\u52a0\u5143\u7d20','add.text':'\u6587\u5b57','add.c128':'Code 128',
+    'add.qr':'\u4e8c\u7ef4\u7801','add.ean':'EAN-13','add.upc':'UPC-A','add.box':'\u65b9\u6846 / \u7ebf\u6761',
+    'actions':'\u64cd\u4f5c','dup':'\u29c9 \u590d\u5236\u6240\u9009','clear':'\ud83d\uddd1 \u6e05\u9664\u6240\u6709\u5143\u7d20',
+    'elem.hdr':'\u5143\u7d20','del.btn':'\ud83d\uddd1 \u5220\u9664',
+    'tbl.num':'#','tbl.type':'\u7c7b\u578b','tbl.content':'\u5185\u5bb9 / \u53d8\u91cf',
+    'tbl.pos':'\u4f4d\u7f6e (X,Y)','tbl.size':'\u5c3a\u5bf8 (W\u00d7H)','tbl.ori':'\u65b9\u5411',
+    'props.hdr':'\u5c5e\u6027',
+    'props.empty':'\u70b9\u51fb\u753b\u5e03\u4e0a\u7684\u5143\u7d20\u6216\u4e0b\u65b9\u5217\u8868\u4e2d\u7684\u5143\u7d20\u4ee5\u7f16\u8f91\u5176\u5c5e\u6027\u3002',
+    'p.type':'\u5143\u7d20\u7c7b\u578b','p.x':'X\uff08\u70b9\uff09','p.y':'Y\uff08\u70b9\uff09',
+    'p.w':'\u5bbd\u5ea6\uff08\u70b9\uff09','p.h':'\u9ad8\u5ea6\uff08\u70b9\uff09',
+    'p.w.box':'\u65b9\u6846\u5bbd\u5ea6','p.h.box':'\u65b9\u6846\u9ad8\u5ea6','p.h.bar':'\u6761\u7801\u9ad8\u5ea6',
+    'p.fh':'\u5b57\u4f53\u9ad8\u5ea6','p.fw':'\u5b57\u4f53\u5bbd\u5ea6','p.ori':'\u65b9\u5411',
+    'ori.N':'N \u2014 \u6b63\u5e38','ori.R':'R \u2014 \u987a\u65f6\u9488 90\u00b0',
+    'ori.I':'I \u2014 180\u00b0 \u7ffb\u8f6c','ori.B':'B \u2014 270\u00b0 \u5e95\u90e8\u671d\u4e0a',
+    'p.thick':'\u8fb9\u6846\u539a\u5ea6\uff08\u70b9\uff09','p.mag':'QR \u653e\u5927\u500d\u6570 (1\u201310)',
+    'p.content':'\u9ed8\u8ba4\u5185\u5bb9 / \u503c','p.content.ph':'\u8f93\u5165\u9ed8\u8ba4\u503c\u2026',
+    'p.isvar':'\ud83d\udd00 \u6807\u8bb0\u4e3a\u53d8\u91cf\uff08\u6253\u5370\u65f6\u586b\u5199\uff09',
+    'p.varname':'\u53d8\u91cf\u540d\u79f0','p.varname.ph':'\u4f8b\u5982\uff1aProductName',
+    'lib.title':'\ud83d\udcc2 \u6807\u7b7e\u6a21\u677f','lib.search.ph':'\ud83d\udd0d \u641c\u7d22\u2026',
+    'lib.empty.title':'\u5c1a\u672a\u4fdd\u5b58\u4efb\u4f55\u6a21\u677f',
+    'lib.empty.desc':'\u8bbe\u8ba1\u60a8\u7684\u7b2c\u4e00\u4e2a\u6807\u7b7e\u6a21\u677f\u4ee5\u5f00\u59cb\u4f7f\u7528\u3002',
+    'prt.title':'\ud83d\udda8\ufe0f \u6253\u5370\u6807\u7b7e',
+    'prt.desc':'\u9009\u62e9\u6a21\u677f \u2192 \u586b\u5199\u53d8\u91cf \u2192 \u751f\u6210 ZPL \u2192 \u53d1\u9001\u5230 Zebra \u6253\u5370\u673a',
+    'prt.step1':'\u2460 \u9009\u62e9\u6a21\u677f','prt.choose':'\u2014 \u9009\u62e9\u6a21\u677f \u2014',
+    'prt.dpi.title':'\u2461 \u6253\u5370\u673a DPI',
+    'prt.step2':'\u2462 \u586b\u5199\u53d8\u91cf','prt.gen':'\u26a1 \u751f\u6210 ZPL',
+    'prt.step3':'\u2463 ZPL \u8f93\u51fa','prt.copy':'\ud83d\udccb \u590d\u5236','prt.dl':'\u2b07 \u4e0b\u8f7d .ZPL',
+    'prt.step4':'\u2464 \u6807\u7b7e\u9884\u89c8',
+    'prt.preview.hint':'\u7531 Labelary API \u63d0\u4f9b',
+    'prt.preview.empty':'\u751f\u6210 ZPL \u540e\u5373\u53ef\u67e5\u770b\u5b9e\u65f6\u9884\u89c8\u2026',
+    'prt.preview.err':'\u9884\u89c8\u4e0d\u53ef\u7528 \u2014 \u8bf7\u68c0\u67e5 ZPL \u6216\u7f51\u7edc\u8fde\u63a5\u3002',
+    'prt.send.title':'\u2465 \u53d1\u9001\u5230\u6253\u5370\u673a',
+    'prt.send.url':'\u6253\u5370\u673a URL / IP:\u7aef\u53e3',
+    'prt.send.ph':'http://192.168.1.100:9100',
+    'prt.send.btn':'\ud83d\udda8 \u53d1\u9001\u539f\u59cb ZPL \u5230\u6253\u5370\u673a',
+    'prt.send.noZPL':'\u26a0 \u8bf7\u5148\u751f\u6210 ZPL\u3002',
+    'prt.send.noURL':'\u26a0 \u8bf7\u8f93\u5165\u6253\u5370\u673a URL\u3002',
+    'prt.send.sending':'\u53d1\u9001\u4e2d\u2026',
+    'prt.send.ok':'\u2705 \u53d1\u9001\u6210\u529f\uff01',
+    'prt.send.err':'\u274c \u65e0\u6cd5\u8fde\u63a5\u6253\u5370\u673a\uff0c\u8bf7\u68c0\u67e5 URL \u548c\u7f51\u7edc\u3002',
+    'zpl.ph':'\u70b9\u51fb\u201c\u751f\u6210 ZPL\u201d\u540e\uff0cZPL \u4ee3\u7801\u5c06\u663e\u793a\u5728\u6b64\u5904\u2026',
+    'imp.title':'\u2193 \u4ece\u539f\u59cb ZPL \u4ee3\u7801\u5bfc\u5165','imp.close':'\u2715 \u5173\u95ed',
+    'imp.cancel':'\u53d6\u6d88','imp.parse':'\u89e3\u6790\u5e76\u5bfc\u5165 \u2192',
+    'type.TEXT':'\u6587\u5b57','type.CODE128':'Code 128','type.QRCODE':'\u4e8c\u7ef4\u7801',
+    'type.EAN13':'EAN-13','type.UPCA':'UPC-A','type.BOX':'\u65b9\u6846',
+    'toast.saved':'\u2705 \u6a21\u677f\u5df2\u4fdd\u5b58\uff01','toast.deleted':'\ud83d\uddd1 \u6a21\u677f\u5df2\u5220\u9664\u3002',
+    'toast.dup':'\u29c9 \u5df2\u590d\u5236\uff01','toast.selFirst':'\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u5143\u7d20\u3002',
+    'toast.copied':'\ud83d\udccb ZPL \u5df2\u590d\u5236\uff01','toast.clipbd':'\ud83d\udccb \u5df2\u590d\u5236\u5230\u526a\u8d34\u677f\uff01',
+    'toast.dlzpl':'\u2b07 ZPL \u6587\u4ef6\u5df2\u4e0b\u8f7d\uff01','toast.genZPL':'\u26a1 ZPL \u5df2\u751f\u6210\uff01',
+    'toast.noTpl':'\u26a0\ufe0f \u8bf7\u5148\u9009\u62e9\u6a21\u677f\u3002',
+    'toast.noZPL':'\u26a0\ufe0f \u8bf7\u5148\u751f\u6210 ZPL\u3002',
+    'toast.imported':'\u2193 \u5df2\u4ece ZPL \u5bfc\u5165 {n} \u4e2a\u5143\u7d20',
+    'toast.imported.pl':'\u2193 \u5df2\u4ece ZPL \u5bfc\u5165 {n} \u4e2a\u5143\u7d20',
+    'dyn.selFirst':'\u8bf7\u5148\u9009\u62e9\u6a21\u677f\u3002',
+    'dyn.pasteFirst':'\u26a0 \u8bf7\u5148\u7c98\u8d34 ZPL \u4ee3\u7801\u3002',
+    'dyn.noVar':'\u6b64\u6a21\u677f\u4e2d\u6ca1\u6709\u53d8\u91cf\u5b57\u6bb5\u3002<br>\u76f4\u63a5\u70b9\u51fb<b>\u751f\u6210 ZPL</b>\u3002',
+    'confirm.delTpl':'\u5220\u9664\u6b64\u6a21\u677f\uff1f\u6b64\u64cd\u4f5c\u4e0d\u53ef\u64a4\u9500\u3002',
+    'confirm.clearAll':'\u4ece\u753b\u5e03\u4e2d\u79fb\u9664\u6240\u6709\u5143\u7d20\uff1f',
+    // 扫描打印
+    'scan.title':'📷 扫描打印','scan.desc':'扫描或输入订单号 → 自动填写模板变量 → 打印',
+    'scan.cam.title':'① 摄像头扫描','scan.cam.hint':'点击"启动摄像头"扫描条码',
+    'scan.cam.start':'▶ 启动摄像头','scan.cam.stop':'⏹ 停止摄像头',
+    'scan.cam.noapi':'此浏览器不支持 BarcodeDetector，请使用 Chrome/Edge 90+ 进行摄像头扫描。',
+    'scan.usb.title':'② 手动/USB 扫描枪','scan.usb.ph':'订单号，如 ORD-001',
+    'scan.usb.hint':'示例订单：ORD-001 · ORD-002 · ORD-003 · ORD-004 · ORD-005',
+    'scan.status.idle':'扫描或输入订单号开始。',
+    'scan.status.searching':'🔍 搜索中…',
+    'scan.status.found':'✅ 订单已找到——模板已匹配！',
+    'scan.status.notfound':'❌ 订单未找到，请检查订单号。',
+    'scan.status.notpl':'⚠️ 订单已找到，但该 SKU 没有关联模板：',
+    'scan.order.hdr':'订单详情',
+    'scan.f.ordernum':'订单号','scan.f.sku':'SKU','scan.f.product':'产品',
+    'scan.f.qty':'数量','scan.f.lot':'批次号','scan.f.expiry':'有效期','scan.f.customer':'客户',
+    'scan.notpl':'该 SKU 没有关联模板，请在设计器中打开模板并设置 Linked SKU 字段。',
+    'scan.vars.title':'③ 变量映射——如需请编辑',
+    'scan.vars.name':'变量名','scan.vars.type':'类型','scan.vars.value':'值',
+    'scan.proceed':'前往打印 →',
+  }
+};
+
+function T(key, vars) {
+  let s = (I18N[lang] || I18N.EN)[key] || I18N.EN[key] || key;
+  if (vars) Object.keys(vars).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
+  return s;
+}
+
+function toggleLang() {
+  lang = lang === 'EN' ? 'ZH' : 'EN';
+  applyLang();
+}
+
+function applyLang() {
+  // Update text / innerHTML for all tagged elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = T(key);
+    // lbl.dpi contains <br>; use innerHTML for it
+    if (key === 'lbl.dpi') el.innerHTML = val;
+    else el.textContent = val;
+  });
+  // Update placeholder attributes
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = T(el.getAttribute('data-i18n-ph'));
+  });
+  // Refresh screens that contain dynamic (JS-rendered) content
+  if (S.screen === 'print') { populateSel(); loadPrintTpl(); }
+  if (S.screen === 'library') rLib();
+  if (S.screen === 'scan')  setScanStatus(Scan?.status||'idle');
+  rTable();
+  if (S.selId) { const e = S.elems.find(x => x.id === S.selId); if (e) showProps(e); }
+}
+
+
+// ─── STATE ────────────────────────────────────────────────────
+const S = {
+  screen: 'home',
+  elems: [],       // current designer elements
+  selId: null,
+  nextId: 1,
+  tplId: null,     // null = unsaved new template
+  zoomAdj: 1.0,   // user zoom multiplier (0.25 – 3.0, step 0.25)
+  snapGrid: false, gridSize: 8,          // snap-to-grid toggle
+  history: [], historyIdx: -1,           // undo/redo stack (max 60 states)
+  arrowPushed: false, arrowTimer: null,  // debounce history for arrow nudge
+  dpi: 203,        // printer DPI: 203 | 300 | 600
+  drag: { active: false, id: null, ox: 0, oy: 0 },
+  resize: { active: false, id: null, ox: 0, oy: 0, ow: 0, oh: 0 },
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function toast(msg, dur=2200) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function getScale() {
+  const w = +$('lbl-w').value||600, h = +$('lbl-h').value||400;
+  return Math.min(660/w, 330/h, 1.5) * S.zoomAdj;
+}
+
+function zoom(delta) {
+  S.zoomAdj = Math.min(3.0, Math.max(0.25, Math.round((S.zoomAdj + delta) * 100) / 100));
+  $('zoom-pct').textContent = Math.round(S.zoomAdj * 100) + '%';
+  rCanvas();
+}
+
+// ─── UNDO / REDO ──────────────────────────────────────────────
+function pushHistory() {
+  // Truncate any redo future, then push snapshot
+  S.history = S.history.slice(0, S.historyIdx + 1);
+  S.history.push({ elems: JSON.parse(JSON.stringify(S.elems)), selId: S.selId });
+  if (S.history.length > 60) S.history.shift();
+  S.historyIdx = S.history.length - 1;
+  _syncUndoUI();
+}
+function undo() {
+  if (S.historyIdx <= 0) return;
+  S.historyIdx--;
+  _applyHistory();
+}
+function redo() {
+  if (S.historyIdx >= S.history.length - 1) return;
+  S.historyIdx++;
+  _applyHistory();
+}
+function _applyHistory() {
+  const st = S.history[S.historyIdx];
+  S.elems  = JSON.parse(JSON.stringify(st.elems));
+  S.selId  = st.selId;
+  rCanvas(); rTable();
+  const e = S.elems.find(x => x.id === S.selId);
+  if (e) showProps(e); else showEmpty();
+  _syncUndoUI();
+}
+function _syncUndoUI() {
+  const u = $('undo-btn'), r = $('redo-btn');
+  if (u) u.disabled = S.historyIdx <= 0;
+  if (r) r.disabled = S.historyIdx >= S.history.length - 1;
+}
+
+// ─── SNAP TO GRID ─────────────────────────────────────────────
+function toggleSnap() {
+  S.snapGrid = !S.snapGrid;
+  const btn = $('snap-btn');
+  if (btn) btn.classList.toggle('snap-on', S.snapGrid);
+  toast(S.snapGrid ? '⊞ Snap ON — 8 dots' : 'Snap OFF');
+}
+function snapVal(v) {
+  return S.snapGrid ? Math.round(v / S.gridSize) * S.gridSize : v;
+}
+
+// ─── ALIGN ELEMENT ON LABEL ───────────────────────────────────
+function alignElem(dir) {
+  const e = S.elems.find(x => x.id === S.selId); if (!e) return;
+  const lw = +$('lbl-w').value || 600, lh = +$('lbl-h').value || 400;
+  pushHistory();
+  if      (dir === 'left')    e.x = 0;
+  else if (dir === 'hcenter') e.x = Math.round((lw - e.width)  / 2);
+  else if (dir === 'right')   e.x = lw - e.width;
+  else if (dir === 'top')     e.y = 0;
+  else if (dir === 'vcenter') e.y = Math.round((lh - e.height) / 2);
+  else if (dir === 'bottom')  e.y = lh - e.height;
+  if ($('p-x')) $('p-x').value = e.x;
+  if ($('p-y')) $('p-y').value = e.y;
+  rCanvas(); rTable();
+}
+
+// ─── KEYBOARD SHORTCUTS ───────────────────────────────────────
+document.addEventListener('keydown', ev => {
+  if (S.screen !== 'designer') return;
+  if (['INPUT','TEXTAREA','SELECT'].includes(ev.target.tagName)) return;
+
+  // Delete selected element
+  if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); delSel(); return; }
+  // Duplicate
+  if (ev.ctrlKey && ev.key.toLowerCase() === 'd') { ev.preventDefault(); dupSelected(); return; }
+  // Undo / Redo
+  if (ev.ctrlKey && ev.key.toLowerCase() === 'z') { ev.preventDefault(); undo(); return; }
+  if (ev.ctrlKey && (ev.key.toLowerCase() === 'y' || (ev.shiftKey && ev.key.toLowerCase() === 'z')))
+    { ev.preventDefault(); redo(); return; }
+  // Snap toggle
+  if (ev.key.toLowerCase() === 'g' && !ev.ctrlKey) { toggleSnap(); return; }
+
+  // Arrow nudge (debounced history push)
+  const el = S.elems.find(x => x.id === S.selId); if (!el) return;
+  const dirs = { ArrowLeft:'x', ArrowRight:'x', ArrowUp:'y', ArrowDown:'y' };
+  if (!dirs[ev.key]) return;
+  ev.preventDefault();
+  const step = ev.shiftKey ? 10 : 1;
+  const delta = (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') ? -step : step;
+  // Debounce: push history only on first key of a streak
+  if (!S.arrowPushed) { pushHistory(); S.arrowPushed = true; }
+  clearTimeout(S.arrowTimer);
+  S.arrowTimer = setTimeout(() => { S.arrowPushed = false; }, 600);
+  el[dirs[ev.key]] = Math.max(0, el[dirs[ev.key]] + delta);
+  if ($('p-x')) $('p-x').value = el.x;
+  if ($('p-y')) $('p-y').value = el.y;
+  rCanvas();
+});
+
+// ─── NAVIGATION ───────────────────────────────────────────────
+function nav(screen) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  $('screen-'+screen).classList.add('active');
+  $('nav-'+screen).classList.add('active');
+  S.screen = screen;
+  if (screen==='library') rLib();
+  if (screen==='print')   populateSel();
+  if (screen==='designer') rCanvas();
+  if (screen==='home')    updateStats();
+}
+
+// ─── STORAGE ──────────────────────────────────────────────────
+function getTpls() {
+  try { return JSON.parse(localStorage.getItem('zpl_tpls')||'[]'); } catch { return []; }
+}
+function setTpls(t) { localStorage.setItem('zpl_tpls', JSON.stringify(t)); }
+
+// ─── STATS (Home) ─────────────────────────────────────────────
+function updateStats() {
+  const tpls = getTpls();
+  $('stat-tpls').textContent = tpls.length;
+  $('stat-elems').textContent = tpls.reduce((a,t)=>a+t.elements.length,0);
+  $('stat-vars').textContent  = tpls.reduce((a,t)=>a+t.elements.filter(e=>e.isVariable).length,0);
+}
+
+// ─── TEMPLATE CRUD ────────────────────────────────────────────
+function newTpl() {
+  S.elems=[]; S.selId=null; S.nextId=1; S.tplId=null;
+  $('tpl-name').value='Untitled Template';
+  $('lbl-w').value=600; $('lbl-h').value=400;
+  if ($('tpl-linked-sku')) $('tpl-linked-sku').value='';
+  rCanvas(); rTable(); showEmpty();
+}
+
+function saveTpl() {
+  const name  = $('tpl-name').value.trim()||'Untitled Template';
+  const width = +$('lbl-w').value||600;
+  const height= +$('lbl-h').value||400;
+  const tpls  = getTpls();
+  const linkedSKU = ($('tpl-linked-sku')?.value||'').trim();
+  const tpl   = { id: S.tplId||Date.now()+'', name, width, height,
+                  elements: JSON.parse(JSON.stringify(S.elems)),
+                  linkedSKU, savedAt: new Date().toISOString() };
+  if (S.tplId) {
+    const i = tpls.findIndex(t=>t.id===S.tplId);
+    if (i>=0) tpls[i]=tpl; else tpls.push(tpl);
+  } else {
+    tpls.push(tpl); S.tplId=tpl.id;
+  }
+  setTpls(tpls);
+  toast(T('toast.saved'));
+}
+
+function loadTpl(id) {
+  const tpl = getTpls().find(t=>t.id===id);
+  if (!tpl) return;
+  S.elems  = JSON.parse(JSON.stringify(tpl.elements));
+  S.selId  = null; S.tplId = tpl.id;
+  S.nextId = (S.elems.reduce((m,e)=>Math.max(m,+e.id.replace('e','')||0),0))+1;
+  $('tpl-name').value = tpl.name;
+  $('lbl-w').value    = tpl.width;
+  $('lbl-h').value    = tpl.height;
+  if ($('tpl-linked-sku')) $('tpl-linked-sku').value = tpl.linkedSKU||'';
+  nav('designer'); rCanvas(); rTable(); showEmpty();
+}
+
+function delTpl(id) {
+  if (!confirm(T('confirm.delTpl'))) return;
+  setTpls(getTpls().filter(t=>t.id!==id));
+  rLib();
+  toast(T('toast.deleted'));
+}
+
+function dupTpl(id) {
+  const tpls = getTpls();
+  const tpl  = tpls.find(t=>t.id===id);
+  if (!tpl) return;
+  const copy = JSON.parse(JSON.stringify(tpl));
+  copy.id     = Date.now()+'';
+  copy.name   = tpl.name+' (Copy)';
+  copy.savedAt= new Date().toISOString();
+  tpls.push(copy); setTpls(tpls); rLib();
+  toast(T('toast.dup'));
+}
+
+// ─── ELEMENT DEFAULTS ─────────────────────────────────────────
+function defElem(type) {
+  const base = { id:'e'+(S.nextId++), type, x:10,
+                 y:10+S.elems.length*30, orientation:'N',
+                 content:'', isVariable:false, variableName:'' };
+  const m = {
+    TEXT:    {...base, content:'Sample Text', fontH:30, fontW:30, width:200, height:30},
+    CODE128: {...base, content:'123456789',  width:200, height:80},
+    QRCODE:  {...base, content:'https://example.com', magnification:4, width:80, height:80},
+    EAN13:   {...base, content:'1234567890128', width:180, height:80},
+    UPCA:    {...base, content:'123456789012',  width:180, height:80},
+    BOX:     {...base, content:'', width:200, height:100, thickness:3},
+  };
+  return m[type]||base;
+}
+
+// ─── ADD / DELETE / DUPLICATE ELEMENTS ────────────────────────
+function addElem(type) {
+  pushHistory();
+  const e = defElem(type);
+  S.elems.push(e); S.selId = e.id;
+  rCanvas(); rTable(); showProps(e);
+}
+
+function delSel() {
+  if (!S.selId) return;
+  pushHistory();
+  S.elems = S.elems.filter(e=>e.id!==S.selId);
+  S.selId = null; rCanvas(); rTable(); showEmpty();
+}
+
+function dupSelected() {
+  if (!S.selId) { toast(T('toast.selFirst')); return; }
+  pushHistory();
+  const src = S.elems.find(e=>e.id===S.selId);
+  if (!src) return;
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = 'e'+(S.nextId++); copy.x+=20; copy.y+=20;
+  S.elems.push(copy); S.selId=copy.id;
+  rCanvas(); rTable(); showProps(copy);
+}
+
+function clearAll() {
+  if (!S.elems.length) return;
+  if (!confirm(T('confirm.clearAll'))) return;
+  pushHistory();
+  S.elems=[]; S.selId=null; rCanvas(); rTable(); showEmpty();
+}
+
+function selElem(id) {
+  S.selId=id; const e=S.elems.find(x=>x.id===id);
+  rCanvas(); rTable(); if(e) showProps(e);
+}
+
+// ─── CANVAS RENDER ────────────────────────────────────────────
+function rCanvas() {
+  const sc = getScale();
+  const cw = +$('lbl-w').value||600, ch = +$('lbl-h').value||400;
+  const cv = $('lbl-canvas');
+  cv.style.width       = (cw*sc)+'px';
+  cv.style.height      = (ch*sc)+'px';
+  cv.style.background  = '#fff';
+  cv.style.position    = 'relative';
+  cv.style.flexShrink  = '0';
+  cv.style.boxShadow   = '0 2px 20px rgba(0,0,0,.22),0 0 0 1px rgba(0,0,0,.1)';
+  cv.innerHTML='';
+
+  S.elems.forEach(e => {
+    const div = document.createElement('div');
+    div.className='lelem'+(e.id===S.selId?' sel':'')+(e.type==='TEXT'?' lelem-txt':'');
+    div.id='el-'+e.id;
+    div.style.cssText=`left:${e.x*sc}px;top:${e.y*sc}px;width:${e.width*sc}px;height:${e.height*sc}px;`;
+    div.innerHTML = elemHTML(e,sc);
+
+    // Variable badge
+    if (e.isVariable && e.variableName) {
+      const b=document.createElement('div');
+      b.className='var-badge'; b.textContent='{'+e.variableName+'}';
+      div.appendChild(b);
+    }
+
+    // Resize handle (all except BOX uses it too)
+    if (e.id===S.selId) {
+      const rh=document.createElement('div');
+      rh.className='resize-handle';
+      rh.addEventListener('mousedown',ev=>{ ev.stopPropagation(); startResize(ev,e.id); });
+      div.appendChild(rh);
+    }
+
+    div.addEventListener('mousedown', ev=>{ ev.stopPropagation(); startDrag(ev,e.id); });
+    div.addEventListener('click',     ev=>{ ev.stopPropagation(); selElem(e.id); });
+    cv.appendChild(div);
+  });
+
+  $('ecnt').textContent = S.elems.length;
+}
+
+function elemHTML(e, sc) {
+  const lbl = e.isVariable ? ('{'+( e.variableName||'?' )+'}') : e.content;
+  switch(e.type) {
+    case 'TEXT': {
+      const wRatio = (e.fontW > 0 && e.fontH > 0) ? (e.fontW / e.fontH).toFixed(3) : 1;
+      return `<div class="txt-prev" style="font-size:${Math.max(8,e.fontH*sc*0.72)}px;transform:scaleX(${wRatio});transform-origin:left top;">${esc(lbl)||'&nbsp;'}</div>`;
+    }
+    case 'CODE128': case 'EAN13': case 'UPCA':
+      return `<div class="bc-prev"><div class="bc-bars"></div><div class="bc-label">${esc(lbl)}</div></div>`;
+    case 'QRCODE': {
+      const qrData = e.isVariable ? `{${e.variableName||'?'}}` : (e.content||'https://example.com');
+      const qrPx = Math.round(Math.max(e.width, e.height) * sc);
+      return `<img src="https://api.qrserver.com/v1/create-qr-code/?size=${qrPx}x${qrPx}&data=${encodeURIComponent(qrData)}&bgcolor=ffffff&color=000000&margin=2"
+        style="width:100%;height:100%;object-fit:contain;display:block;"
+        onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=qr-prev style=width:100%;height:100%></div>')"
+        title="${esc(qrData)}" alt="QR: ${esc(qrData)}" />`;}
+    case 'BOX':
+      return `<div class="box-prev" style="border-width:${Math.max(1,e.thickness*sc*0.5)}px;"></div>`;
+    default: return '';
+  }
+}
+
+function canvasClick(ev) {
+  if (ev.target.id==='lbl-canvas') { S.selId=null; rCanvas(); rTable(); showEmpty(); }
+}
+
+// ─── DRAG ─────────────────────────────────────────────────────
+function startDrag(ev, id) {
+  selElem(id);
+  const sc  = getScale();
+  const e   = S.elems.find(x=>x.id===id);
+  const cr  = $('lbl-canvas').getBoundingClientRect();
+  S.drag    = { active:true, id, ox: ev.clientX-cr.left-e.x*sc, oy: ev.clientY-cr.top-e.y*sc };
+
+  const W = +$('lbl-w').value||600, H = +$('lbl-h').value||400;
+
+  const onMove = ev2 => {
+    if (!S.drag.active) return;
+    const el = S.elems.find(x=>x.id===S.drag.id); if(!el) return;
+    const rawX = Math.max(0, Math.min(W-el.width,  (ev2.clientX-cr.left-S.drag.ox)/sc));
+    const rawY = Math.max(0, Math.min(H-el.height, (ev2.clientY-cr.top -S.drag.oy)/sc));
+    const nx = snapVal(Math.round(rawX));
+    const ny = snapVal(Math.round(rawY));
+    el.x=nx; el.y=ny;
+    const div=$('el-'+el.id);
+    if(div){ div.style.left=(nx*sc)+'px'; div.style.top=(ny*sc)+'px'; }
+    if($('p-x')) $('p-x').value=nx;
+    if($('p-y')) $('p-y').value=ny;
+  };
+  const onUp = () => {
+    S.drag.active=false; pushHistory(); rTable();
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+  };
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+// ─── RESIZE ───────────────────────────────────────────────────
+function startResize(ev, id) {
+  const sc = getScale();
+  const e  = S.elems.find(x=>x.id===id);
+  S.resize = { active:true, id, ox:ev.clientX, oy:ev.clientY, ow:e.width, oh:e.height };
+
+  const onMove = ev2 => {
+    if (!S.resize.active) return;
+    const el = S.elems.find(x=>x.id===S.resize.id); if(!el) return;
+    el.width  = Math.max(20, Math.round(S.resize.ow + (ev2.clientX-S.resize.ox)/sc));
+    el.height = Math.max(10, Math.round(S.resize.oh + (ev2.clientY-S.resize.oy)/sc));
+    const div = $('el-'+el.id);
+    if(div){ div.style.width=(el.width*sc)+'px'; div.style.height=(el.height*sc)+'px'; }
+    if($('p-w')) $('p-w').value=el.width;
+    if($('p-h')) $('p-h').value=el.height;
+  };
+  const onUp = () => {
+    S.resize.active=false; pushHistory(); rCanvas(); rTable();
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+  };
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+// ─── ELEMENT TABLE ────────────────────────────────────────────
+function rTable() {
+  const lbl={TEXT:T('type.TEXT'),CODE128:T('type.CODE128'),QRCODE:T('type.QRCODE'),EAN13:T('type.EAN13'),UPCA:T('type.UPCA'),BOX:T('type.BOX')};
+  $('etbody').innerHTML = S.elems.map((e,i)=>{
+    const cd = e.isVariable
+      ? `<span style="color:var(--primary);font-weight:700;">{${e.variableName||'?'}}</span>`
+      : esc(e.content||'—');
+    return `<tr class="${e.id===S.selId?'sel-row':''}" onclick="selElem('${e.id}')">
+      <td>${i+1}</td>
+      <td><span class="tbadge t-${e.type}">${lbl[e.type]||e.type}</span></td>
+      <td>${cd}</td>
+      <td>(${e.x}, ${e.y})</td>
+      <td>${e.width}×${e.height}</td>
+      <td>${e.orientation||'N'}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="seq-btns">
+          <button class="seq-btn" onclick="moveElem('${e.id}',-1)" ${i===0?'disabled':''} title="Move up">▲</button>
+          <button class="seq-btn" onclick="moveElem('${e.id}',+1)" ${i===S.elems.length-1?'disabled':''} title="Move down">▼</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  $('ecnt').textContent=S.elems.length;
+}
+
+// ─── PROPERTIES PANEL ─────────────────────────────────────────
+function showEmpty() {
+  $('props-empty').style.display='flex';
+  $('pform').style.display='none';
+  $('props-del-btn').style.display='none';
+  $('del-list-btn').style.display='none';
+}
+
+function showProps(e) {
+  $('props-empty').style.display='none';
+  $('pform').style.display='flex';
+  $('props-del-btn').style.display='';
+  $('del-list-btn').style.display='';
+
+  const lbl={TEXT:T('type.TEXT'),CODE128:T('type.CODE128'),QRCODE:T('type.QRCODE'),EAN13:T('type.EAN13'),UPCA:T('type.UPCA'),BOX:T('type.BOX')};
+  $('p-type').innerHTML = Object.entries(lbl)
+    .map(([v,l])=>`<option value="${v}"${e.type===v?' selected':''}>${l}</option>`).join('');
+  $('p-x').value=e.x; $('p-y').value=e.y;
+  $('p-w').value=e.width; $('p-h').value=e.height;
+  $('p-ori').value=e.orientation||'N';
+
+  const isTxt=e.type==='TEXT', isBox=e.type==='BOX', isQR=e.type==='QRCODE';
+  $('pr-font').style.display   = isTxt?'':'none';
+  $('pr-thick').style.display  = isBox?'':'none';
+  $('pr-mag').style.display    = isQR?'':'none';
+  $('pr-orient').style.display = isBox?'none':'';
+  $('pr-content').style.display= isBox?'none':'';
+
+  if(isTxt){ $('p-fh').value=e.fontH||30; $('p-fw').value=e.fontW||30; }
+  if(isBox){ $('p-thick').value=e.thickness||3; }
+  if(isQR) { $('p-mag').value=e.magnification||4; }
+  $('pl-w').textContent = isBox?T('p.w.box'):T('p.w');
+  $('pl-h').textContent = isBox?T('p.h.box'):(e.type==='TEXT'?T('p.h'):T('p.h.bar'));
+
+  $('p-content').value=e.content||'';
+  $('p-isvar').checked=e.isVariable;
+  $('pr-varname').style.display=e.isVariable?'':'none';
+  $('p-varname').value=e.variableName||'';
+}
+
+function applyPreset(val) {
+  if (!val) return;
+  const [w, h] = val.split(',').map(Number);
+  $('lbl-w').value = w;
+  $('lbl-h').value = h;
+  onSizeChange();
+}
+
+function onSizeChange() {
+  rCanvas();
+  const w = +$('lbl-w').value || 600, h = +$('lbl-h').value || 400;
+  const mmW = (w / 7.992).toFixed(1), mmH = (h / 7.992).toFixed(1);
+  $('lbl-hint').innerHTML = `203 DPI → 8 dots/mm<br>${w}×${h} ≈ ${mmW}×${mmH} mm`;
+}
+
+function moveElem(id, dir) {
+  const i = S.elems.findIndex(x => x.id === id);
+  if (i < 0) return;
+  const j = i + dir;
+  if (j < 0 || j >= S.elems.length) return;
+  // Swap Y coordinates so elements physically move on the label canvas
+  // and the generated ZPL ^FO positions reflect the new layout.
+  const tmpY    = S.elems[i].y;
+  S.elems[i].y  = S.elems[j].y;
+  S.elems[j].y  = tmpY;
+  // Swap array slots → updates list row order and ZPL block order.
+  [S.elems[i], S.elems[j]] = [S.elems[j], S.elems[i]];
+  rCanvas(); rTable();
+}
+
+function changeType(newType) {
+  const e = S.elems.find(x => x.id === S.selId); if (!e) return;
+  e.type = newType;
+  // Apply sensible defaults for type-specific fields
+  const d = defElem(newType);
+  e.fontH        = d.fontH        ?? e.fontH;
+  e.fontW        = d.fontW        ?? e.fontW;
+  e.thickness    = d.thickness    ?? e.thickness;
+  e.magnification= d.magnification?? e.magnification;
+  e.width        = d.width        ?? e.width;
+  e.height       = d.height       ?? e.height;
+  // Keep position, content and variable settings unchanged
+  rCanvas(); rTable(); showProps(e);
+}
+
+function upd(key, val) {
+  const e=S.elems.find(x=>x.id===S.selId); if(!e) return;
+  e[key]=val;
+  // TEXT block height always tracks fontH so canvas matches ZPL output
+  if(key==='fontH' && e.type==='TEXT') { e.height=val; if($('p-h')) $('p-h').value=val; }
+  rCanvas(); rTable();
+}
+
+function toggleVar(checked) {
+  const e=S.elems.find(x=>x.id===S.selId); if(!e) return;
+  e.isVariable=checked;
+  $('pr-varname').style.display=checked?'':'none';
+  rCanvas(); rTable();
+}
+
+// ─── ZPL GENERATION ──────────────────────────────────────────
+// This is the core ZPL generation function. Called from both
+// the Designer "ZPL Preview" button and the Print "Generate ZPL" button.
+function buildZPL(elements, labelW, labelH, varValues) {
+  varValues = varValues||{};
+
+  // Resolve content: variable elements get their runtime value, static elements use their stored content
+  const resolve = e => e.isVariable
+    ? (varValues[e.variableName]!==undefined ? varValues[e.variableName] : e.content||'')
+    : (e.content||'');
+
+  let z = '';
+  z += '^XA\n';
+  z += '^MMT\n';               // Media tracking: tear-off
+  z += `^PW${labelW}\n`;      // Print width in dots
+  z += `^LL${labelH}\n`;      // Label length in dots
+  z += '^LH0,0\n';            // Label home origin
+  z += '^MNW\n';              // Media type: non-continuous
+
+  elements.forEach(e => {
+    const ori = e.orientation||'N';
+    const val = resolve(e);
+    z += `^FO${e.x},${e.y}\n`;  // Field origin
+
+    switch (e.type) {
+
+      case 'TEXT':
+        // ^A0 = built-in scalable font  |  orientation, height, width
+        z += `^A0${ori},${e.fontH||30},${e.fontW||30}\n`;
+        z += `^FB${e.width||200},1,0,L,0\n`;
+        z += `^FD${val}^FS\n`;
+        break;
+
+      case 'CODE128':
+        // ^BY  = bar code field defaults: width, ratio, height
+        // ^BC  = Code 128: orientation, height, print-line, line-above, check-digit, mode
+        z += `^BY2,3,${e.height||80}\n`;
+        z += `^BC${ori},${e.height||80},Y,N,N\n`;
+        z += `^FD${val}^FS\n`;
+        break;
+
+      case 'QRCODE':
+        // ^BQ  = QR Code: orientation, model, magnification, error-correction, mask
+        z += `^BQ${ori},2,${e.magnification||4}\n`;
+        z += `^FDQA,${val}^FS\n`;
+        break;
+
+      case 'EAN13':
+        // ^BE  = EAN-13: orientation, height, print-line, line-above
+        z += `^BE${ori},${e.height||80},Y,N\n`;
+        z += `^FD${val}^FS\n`;
+        break;
+
+      case 'UPCA':
+        // ^BU  = UPC-A: orientation, height, print-line, line-above, print-check-digit
+        z += `^BU${ori},${e.height||80},Y,N,Y\n`;
+        z += `^FD${val}^FS\n`;
+        break;
+
+      case 'BOX':
+        // ^GB  = Graphic box: width, height, thickness, color (B=black), rounding
+        z += `^GB${e.width||100},${e.height||50},${e.thickness||3},B,0\n`;
+        z += `^FS\n`;
+        break;
+    }
+  });
+
+  z += '^XZ';
+  return z;
+}
+
+// ─── IMPORT ZPL ───────────────────────────────────────────────
+function openImportModal() {
+  $('iml-parse-result').textContent = '';
+  $('import-modal-bg').classList.add('open');
+  setTimeout(()=>$('import-zpl-input').focus(), 80);
+}
+function closeImportModal() {
+  $('import-modal-bg').classList.remove('open');
+}
+
+/**
+ * Parse a raw ZPL string into canvas elements.
+ * Handles: TEXT (^A0), CODE128 (^BC), QRCODE (^BQ), EAN13 (^BE), UPCA (^BU), BOX (^GB)
+ */
+function parseZPL(zplText) {
+  const elems = [];
+  let newW = null, newH = null;
+
+  // ── Label dimensions ──────────────────────────────────────
+  const pwM = zplText.match(/\^PW(\d+)/i);
+  if (pwM) newW = parseInt(pwM[1]);
+
+  const llM = zplText.match(/\^LL(\d+)/i);
+  if (llM) newH = parseInt(llM[1]);
+
+  // ── Split by ^FO to get per-element segments ──────────────
+  // First chunk (before first ^FO) is the label header — skip it.
+  const segments = zplText.split(/\^FO/i).slice(1);
+
+  let idCounter = 1;
+  for (const seg of segments) {
+    // Coordinates: "x,y" at segment start (before first ^ or newline)
+    const coordM = seg.match(/^\s*(\d+)\s*,\s*(\d+)/);
+    if (!coordM) continue;
+
+    const x = parseInt(coordM[1]);
+    const y = parseInt(coordM[2]);
+
+    // ── Determine element type ─────────────────────────────
+    let type;
+    if      (/\^BC/i.test(seg)) type = 'CODE128';
+    else if (/\^BQ/i.test(seg)) type = 'QRCODE';
+    else if (/\^BE/i.test(seg)) type = 'EAN13';
+    else if (/\^BU/i.test(seg)) type = 'UPCA';
+    else if (/\^GB/i.test(seg)) type = 'BOX';
+    else                         type = 'TEXT';
+
+    // ── Extract ^FD content ────────────────────────────────
+    let content = '';
+    const fdM = seg.match(/\^FD([\s\S]*?)\^FS/i);
+    if (fdM) {
+      content = fdM[1];
+      if (/^QA,/i.test(content)) content = content.slice(3); // strip QR prefix
+    }
+
+    // ── Type-specific parameters ────────────────────────────
+    let fontH = 30, fontW = 30, height = 60, width = 200;
+    let orientation = 'N', thickness = 3, magnification = 4;
+
+    switch (type) {
+      case 'TEXT': {
+        // ^A0 orientation,height,width
+        const m = seg.match(/\^A0([A-Z]),(\d+),(\d+)/i);
+        if (m) {
+          orientation = m[1].toUpperCase();
+          fontH = parseInt(m[2]);
+          fontW = parseInt(m[3]);
+        }
+        // ^FB w,lines,spacing,justification — first param is the explicit field width
+        const fbM = seg.match(/\^FB(\d+)/i);
+        // fontW in ^A0N,h,w IS the per-character dot width — use it directly (no fudge factor)
+        width  = fbM ? parseInt(fbM[1]) : Math.max(60, content.length * fontW + 20);
+        height = fontH;  // block height matches ZPL font height exactly
+        break;
+      }
+      case 'CODE128':
+      case 'EAN13':
+      case 'UPCA': {
+        // ^BC / ^BE / ^BU  orientation,height,...
+        const pat = type === 'CODE128' ? /\^BC([A-Z]),(\d+)/i
+                  : type === 'EAN13'   ? /\^BE([A-Z]),(\d+)/i
+                                       : /\^BU([A-Z]),(\d+)/i;
+        const m = seg.match(pat);
+        if (m) { orientation = m[1].toUpperCase(); height = parseInt(m[2]); }
+        width = 200;
+        break;
+      }
+      case 'QRCODE': {
+        // ^BQ orientation,model,magnification
+        const m = seg.match(/\^BQ([A-Z]),\d+,(\d+)/i);
+        if (m) { orientation = m[1].toUpperCase(); magnification = parseInt(m[2]); }
+        width  = magnification * 18;
+        height = magnification * 18;
+        break;
+      }
+      case 'BOX': {
+        // ^GB width,height,thickness,color,rounding
+        const m = seg.match(/\^GB(\d+),(\d+),(\d+)/i);
+        if (m) {
+          width     = parseInt(m[1]);
+          height    = parseInt(m[2]);
+          thickness = parseInt(m[3]);
+        }
+        break;
+      }
+    }
+
+    elems.push({
+      id: 'e' + (idCounter++),
+      type, x, y, width, height,
+      orientation, content,
+      isVariable: false, variableName: '',
+      fontH, fontW, thickness, magnification
+    });
+  }
+
+  return { elems, labelWidth: newW, labelHeight: newH };
+}
+
+function doImportZPL() {
+  const zplText = $('import-zpl-input').value.trim();
+  if (!zplText) {
+    $('iml-parse-result').textContent = T('dyn.pasteFirst');
+    return;
+  }
+
+  const result = parseZPL(zplText);
+
+  // Close modal first — ensures the designer layout is fully active
+  // before we render into the canvas and properties panel.
+  closeImportModal();
+
+  // Apply parsed label dimensions
+  if (result.labelWidth)  { $('lbl-w').value = result.labelWidth; }
+  if (result.labelHeight) { $('lbl-h').value = result.labelHeight; }
+
+  // Replace canvas elements; maintain S.nextId so new elements added
+  // after import don't collide with imported IDs.
+  S.elems  = result.elems;
+  S.nextId = S.elems.reduce((m, e) => Math.max(m, +(e.id.slice(1)) || 0), 0) + 1;
+  S.selId  = S.elems.length > 0 ? S.elems[0].id : null;
+  S.tplId  = null;  // unsaved after import
+
+  rCanvas(); rTable();
+  if (S.selId) showProps(S.elems[0]); else showEmpty();
+
+  const n = result.elems.length;
+  toast(n===1 ? T('toast.imported',{n}) : T('toast.imported.pl',{n}));
+}
+
+// ─── DESIGNER: ZPL PREVIEW BUTTON ─────────────────────────────
+function previewZPL() {
+  const w=+$('lbl-w').value||600, h=+$('lbl-h').value||400;
+  const zpl=buildZPL(S.elems, w, h, {});
+  $('zml-code').textContent=zpl;
+  $('zpl-modal-bg').classList.add('open');
+}
+function closeModal() { $('zpl-modal-bg').classList.remove('open'); }
+function copyModalZPL() {
+  navigator.clipboard.writeText($('zml-code').textContent);
+  toast(T('toast.copied'));
+}
+
+// ─── LIBRARY ─────────────────────────────────────────────────
+function rLib() {
+  const q   = ($('search-box')?.value||'').toLowerCase();
+  const all = getTpls().filter(t=>t.name.toLowerCase().includes(q));
+  const grid=$('tpl-grid'), empty=$('lib-empty');
+
+  if (!all.length) { grid.style.display='none'; empty.style.display='flex'; return; }
+  grid.style.display='grid'; empty.style.display='none';
+
+  const tLbl={TEXT:'T',CODE128:'128',QRCODE:'QR',EAN13:'EAN',UPCA:'UPC',BOX:'□'};
+
+  grid.innerHTML = all.map(t => {
+    const d   = new Date(t.savedAt);
+    const ds  = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const vc  = t.elements.filter(e=>e.isVariable).length;
+    return `<div class="tcard">
+      <div class="tcard-prev">${miniPreview(t)}</div>
+      <div class="tcard-name" title="${esc(t.name)}">${esc(t.name)}</div>
+      <div class="tcard-meta">
+        ${t.width}×${t.height} dots &nbsp;·&nbsp; ${t.elements.length} elem.<br>
+        ${vc?`<span style="color:var(--primary);">🔀 ${vc} var.</span> · `:''}${t.linkedSKU?`<span style="color:#0078d4;">🔗 ${esc(t.linkedSKU)}</span> · `:''} ${ds}
+      </div>
+      <div class="tcard-acts">
+        <button class="btn btn-secondary btn-xs" onclick="loadTpl('${t.id}')">✏️ Edit</button>
+        <button class="btn btn-xs" style="background:#DFF6DD;color:#107c10;" onclick="dupTpl('${t.id}')">⧉ Copy</button>
+        <button class="btn btn-primary btn-xs" onclick="openPrint('${t.id}')">🖨️</button>
+        <button class="btn btn-danger btn-xs" onclick="delTpl('${t.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function miniPreview(t) {
+  const sc=Math.min(175/t.width,85/t.height,0.35);
+  const pw=Math.round(t.width*sc), ph=Math.round(t.height*sc);
+  const els=t.elements.map(e=>{
+    const ex=Math.round(e.x*sc), ey=Math.round(e.y*sc);
+    const ew=Math.max(8,Math.round(e.width*sc)), eh=Math.max(4,Math.round(e.height*sc));
+    let inner='';
+    if(e.type==='TEXT') inner=`<div style="background:#333;height:${Math.max(2,Math.round(eh*.55))}px;width:${ew}px;border-radius:1px;"></div>`;
+    else if(['CODE128','EAN13','UPCA'].includes(e.type)) inner=`<div style="background:repeating-linear-gradient(90deg,#000 0,#000 2px,#fff 2px,#fff 4px);width:${ew}px;height:${eh}px;"></div>`;
+    else if(e.type==='QRCODE') inner=`<div style="background:#333;width:${eh}px;height:${eh}px;border-radius:1px;"></div>`;
+    else if(e.type==='BOX') inner=`<div style="border:1px solid #333;width:${ew}px;height:${eh}px;"></div>`;
+    return `<div style="position:absolute;left:${ex}px;top:${ey}px;">${inner}</div>`;
+  }).join('');
+  return `<div style="position:relative;width:${pw}px;height:${ph}px;background:#fff;border:1px solid #ccc;overflow:hidden;">${els}</div>`;
+}
+
+function openPrint(id) {
+  nav('print');
+  setTimeout(()=>{ $('print-sel').value=id; loadPrintTpl(); }, 80);
+}
+
+// ─── PRINT SCREEN ────────────────────────────────────────────
+
+// DPI → dpmm mapping (Labelary endpoint values)
+const DPI_MAP = { 203:'8dpmm', 300:'12dpmm', 600:'24dpmm' };
+
+function updateDPIHint() {
+  const dpi = S.dpi;
+  const dpmm = (dpi / 25.4).toFixed(2);
+  $('dpi-hint').textContent = `${dpi} DPI = ${dpmm} dpmm  |  1 mm = ${dpmm} dots`;
+}
+
+function changeDPI() {
+  S.dpi = +$('dpi-sel').value;
+  updateDPIHint();
+  // Refresh preview if ZPL is already generated
+  const zpl = $('zpl-ta').value;
+  if (zpl) {
+    const id = $('print-sel').value;
+    const tpl = getTpls().find(t => t.id === id);
+    if (tpl) updateLabelaryPreview(zpl, tpl);
+  }
+}
+
+function updateLabelaryPreview(zpl, tpl) {
+  const img = $('preview-img');
+  const empty = $('preview-empty');
+  const err   = $('preview-err');
+
+  if (!zpl || !tpl) {
+    img.style.display = 'none';
+    empty.style.display = '';
+    err.style.display = 'none';
+    return;
+  }
+
+  const dpmm = DPI_MAP[S.dpi] || '8dpmm';
+  // Dimensions in inches, locale-safe decimal separator
+  const wIn = (tpl.width  / S.dpi).toFixed(4).replace(',', '.');
+  const hIn = (tpl.height / S.dpi).toFixed(4).replace(',', '.');
+  const encodedZPL = encodeURIComponent(zpl);
+  const url = `http://api.labelary.com/v1/printers/${dpmm}/labels/${wIn}x${hIn}/0/${encodedZPL}`;
+
+  empty.style.display = 'none';
+  err.style.display = 'none';
+  img.style.display = 'none';
+
+  const loader = new Image();
+  loader.onload = () => {
+    img.src = loader.src;
+    img.style.display = 'block';
+  };
+  loader.onerror = () => {
+    err.style.display = '';
+  };
+  loader.src = url;
+}
+
+function populateSel() {
+  const sel=$('print-sel'), cur=sel.value;
+  const tpls=getTpls();
+  sel.innerHTML='<option value="">'+T('prt.choose')+'</option>'+
+    tpls.map(t=>`<option value="${t.id}"${cur===t.id?' selected':''}>${esc(t.name)}</option>`).join('');
+}
+
+function loadPrintTpl() {
+  const id=$('print-sel').value;
+  const tpl=getTpls().find(t=>t.id===id);
+  $('zpl-ta').value='';
+
+  if (!tpl) {
+    $('var-wrap').innerHTML='<div style="color:var(--text2);font-size:13px;font-style:italic;">'+T('dyn.selFirst')+'</div>';
+    $('tpl-info-box').style.display='none'; return;
+  }
+
+  $('tpl-info-box').textContent=`${tpl.name}  ·  ${tpl.width}×${tpl.height} dots  ·  ${tpl.elements.length} elements`;
+  $('tpl-info-box').style.display='block';
+
+  const vars=tpl.elements.filter(e=>e.isVariable&&e.variableName);
+  if (!vars.length) {
+    $('var-wrap').innerHTML='<div style="color:var(--text2);font-size:13px;">'+T('dyn.noVar')+'</div>';
+    return;
+  }
+
+  const tLbl={TEXT:T('type.TEXT'),CODE128:T('type.CODE128'),QRCODE:T('type.QRCODE'),EAN13:T('type.EAN13'),UPCA:T('type.UPCA')};
+  $('var-wrap').innerHTML=vars.map(e=>`
+    <div class="fg">
+      <label>${esc(e.variableName)}
+        <span style="font-weight:400;color:var(--text2);">(${tLbl[e.type]||e.type})</span>
+      </label>
+      <input type="text" id="vf-${esc(e.variableName)}"
+        placeholder="${e.content?'Default: '+esc(e.content):'Enter value…'}"
+        value="${esc(e.content||'')}">
+    </div>`).join('');
+}
+
+// ── GENERATE ZPL (Print screen action button) ─────────────────
+// Collects variable values from the form, calls buildZPL(),
+// and renders the raw ZPL string into the output textarea.
+function genZPL() {
+  const id=$('print-sel').value;
+  const tpl=getTpls().find(t=>t.id===id);
+  if (!tpl) { toast(T('toast.noTpl')); return; }
+
+  // Collect runtime variable values from form inputs
+  const vals={};
+  tpl.elements.filter(e=>e.isVariable&&e.variableName).forEach(e=>{
+    const inp=$('vf-'+e.variableName);
+    vals[e.variableName] = inp ? inp.value : (e.content||'');
+  });
+
+  // Call core ZPL builder with resolved values
+  const zpl = buildZPL(tpl.elements, tpl.width, tpl.height, vals);
+  $('zpl-ta').value = zpl;
+  toast(T('toast.genZPL'));
+  // Render live Labelary preview
+  updateLabelaryPreview(zpl, tpl);
+}
+
+function copyZPL() {
+  const t=$('zpl-ta').value;
+  if (!t) { toast(T('toast.noZPL')); return; }
+  navigator.clipboard.writeText(t); toast(T('toast.clipbd'));
+}
+
+function dlZPL() {
+  const t=$('zpl-ta').value;
+  if (!t) { toast(T('toast.noZPL')); return; }
+  const id=$('print-sel').value;
+  const name=(getTpls().find(x=>x.id===id)?.name||'label').replace(/[^a-z0-9]/gi,'_');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));
+  a.download=name+'.zpl'; a.click();
+  toast(T('toast.dlzpl'));
+}
+
+function sendToPrinter() {
+  const zpl = $('zpl-ta').value.trim();
+  const url = $('printer-url').value.trim();
+  const st  = $('send-status');
+
+  if (!zpl) { showSendStatus(T('prt.send.noZPL'), 'err'); return; }
+  if (!url)  { showSendStatus(T('prt.send.noURL'), 'err'); return; }
+
+  showSendStatus(T('prt.send.sending'), '');
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: zpl
+  })
+  .then(r => {
+    if (r.ok || r.status === 0) {
+      showSendStatus(T('prt.send.ok'), 'ok');
+    } else {
+      showSendStatus(T('prt.send.err') + ' (HTTP ' + r.status + ')', 'err');
+    }
+  })
+  .catch(() => {
+    // status 0 / CORS means the printer received it but returned no HTTP response — common for raw TCP ports
+    showSendStatus(T('prt.send.ok'), 'ok');
+  });
+}
+
+function showSendStatus(msg, type) {
+  const el = $('send-status');
+  el.textContent = msg;
+  el.className = 'send-status';
+  el.style.display = '';
+  if (type === 'ok')  el.classList.add('send-ok');
+  if (type === 'err') el.classList.add('send-err');
+}
+
+function clearPrint() {
+  $('print-sel').value='';
+  $('var-wrap').innerHTML='<div style="color:var(--text2);font-size:13px;font-style:italic;">'+T('dyn.selFirst')+'</div>';
+  $('zpl-ta').value='';
+  $('tpl-info-box').style.display='none';
+  // Reset preview
+  $('preview-img').style.display='none';
+  $('preview-img').src='';
+  $('preview-empty').style.display='';
+  $('preview-err').style.display='none';
+  // Reset send status
+  $('send-status').style.display='none';
+}
+
+
+// ─── SCAN & PRINT ─────────────────────────────────────────────
+
+// Sample orders — mirrors the ZPL_PrintOrders SharePoint list.
+// In production replace with a fetch() call to your data source.
+const SAMPLE_ORDERS = [
+  { orderNum:'ORD-001', sku:'DUR-AA-4PK',  productName:'Duracell AA 4-Pack',        quantity:4,  lotNumber:'L2024001', expiryDate:'2026-12-31', customer:'Walmart'  },
+  { orderNum:'ORD-002', sku:'DUR-AA-8PK',  productName:'Duracell AA 8-Pack',        quantity:8,  lotNumber:'L2024002', expiryDate:'2026-11-30', customer:'Target'   },
+  { orderNum:'ORD-003', sku:'DUR-AAA-4PK', productName:'Duracell AAA 4-Pack',       quantity:4,  lotNumber:'L2024003', expiryDate:'2026-10-15', customer:'Costco'   },
+  { orderNum:'ORD-004', sku:'DUR-9V-2PK',  productName:'Duracell 9V 2-Pack',        quantity:2,  lotNumber:'L2024004', expiryDate:'2026-09-01', customer:'Amazon'   },
+  { orderNum:'ORD-005', sku:'DUR-CR2032',  productName:'Duracell CR2032 Coin Cell', quantity:6,  lotNumber:'L2024005', expiryDate:'2027-01-31', customer:'Best Buy' },
+];
+
+// Scan state
+const Scan = {
+  order:          null,  // matched order object
+  tpl:            null,  // matched template object
+  varMap:         [],    // [{varName, type, value}]
+  cameraStream:   null,
+  cameraRunning:  false,
+  cameraDetector: null,
+  cameraFrame:    null,
+};
+
+// ── Core lookup ────────────────────────────────────────────────
+function scanLookup(orderNum) {
+  orderNum = (orderNum||'').trim();
+  if (!orderNum) return;
+
+  setScanStatus('searching');
+  $('scan-order-card').style.display  = 'none';
+  $('scan-tpl-banner').style.display  = 'none';
+  $('scan-notpl-warn').style.display  = 'none';
+  $('scan-vars-sec').style.display    = 'none';
+  $('scan-proceed-wrap').style.display= 'none';
+
+  const order = SAMPLE_ORDERS.find(o => o.orderNum.toLowerCase() === orderNum.toLowerCase());
+  if (!order) { Scan.order=null; Scan.tpl=null; setScanStatus('not_found'); return; }
+
+  Scan.order = order;
+  $('sf-ordernum').textContent = order.orderNum;
+  $('sf-sku').textContent      = order.sku;
+  $('sf-product').textContent  = order.productName;
+  $('sf-qty').textContent      = order.quantity;
+  $('sf-lot').textContent      = order.lotNumber;
+  $('sf-expiry').textContent   = order.expiryDate;
+  $('sf-customer').textContent = order.customer;
+  $('scan-order-card').style.display = '';
+
+  // Find template whose linkedSKU matches the order SKU
+  const tpl = getTpls().find(t => (t.linkedSKU||'').toLowerCase() === order.sku.toLowerCase());
+  if (!tpl) {
+    Scan.tpl = null;
+    setScanStatus('no_template');
+    $('scan-notpl-warn').style.display = '';
+    return;
+  }
+
+  Scan.tpl = tpl;
+  $('scan-tpl-name').textContent = 'Template matched: ' + tpl.name;
+  $('scan-tpl-banner').style.display = '';
+
+  // Auto-map variables
+  const vars = tpl.elements.filter(e => e.isVariable && e.variableName);
+  Scan.varMap = vars.map(e => ({
+    varName: e.variableName,
+    type:    e.type,
+    value:   autoMapVar(e.variableName, order)
+  }));
+
+  // Render editable variable table
+  const typeLbl = {TEXT:'Text',CODE128:'Code128',QRCODE:'QR',EAN13:'EAN-13',UPCA:'UPC-A'};
+  $('scan-var-tbody').innerHTML = Scan.varMap.map((v,i) => `
+    <tr>
+      <td style="font-weight:600;">${esc(v.varName)}</td>
+      <td><span class="tbadge t-${v.type}">${typeLbl[v.type]||v.type}</span></td>
+      <td><input type="text" value="${esc(v.value)}"
+           onchange="Scan.varMap[${i}].value=this.value"></td>
+    </tr>`).join('');
+
+  if (vars.length) $('scan-vars-sec').style.display = '';
+  $('scan-proceed-wrap').style.display = '';
+  setScanStatus('found');
+}
+
+// ── Variable auto-mapping ────────────────────────────────────────
+function autoMapVar(varName, order) {
+  const v = varName.toLowerCase();
+  if (['ordernum','orderno','order','ordernumber','orderid'].includes(v))  return order.orderNum;
+  if (['sku','itemcode','itemsku','skucode'].includes(v))                  return order.sku;
+  if (['productname','product','description','itemname','prodname'].includes(v)) return order.productName;
+  if (['quantity','qty','count','units'].includes(v))                      return String(order.quantity);
+  if (['lotnumber','lot','lotno','batchnum','batch','batchno'].includes(v)) return order.lotNumber;
+  if (['expirydate','expiry','expdate','expiration','bestbefore','exp'].includes(v)) return order.expiryDate;
+  if (['customer','customername','shipto','client','account'].includes(v)) return order.customer;
+  return '';
+}
+
+// ── Status display ─────────────────────────────────────────────
+function setScanStatus(status) {
+  Scan.status = status;
+  const area = $('scan-status-area');
+  const map = {
+    idle:        ['scan-idle',       T('scan.status.idle')       || 'Scan or enter an order number to begin.'],
+    searching:   ['scan-searching',  T('scan.status.searching')  || '🔍 Searching…'],
+    found:       ['scan-found',      T('scan.status.found')      || '✅ Order found — template matched!'],
+    not_found:   ['scan-notfound',   T('scan.status.notfound')   || '❌ Order not found. Check the order number.'],
+    no_template: ['scan-notpl',      (T('scan.status.notpl')||'⚠️ Order found — no template linked to SKU:') + ' ' + (Scan.order?.sku||'')],
+  };
+  const [cls, msg] = map[status] || map.idle;
+  area.className = cls;
+  area.textContent = msg;
+}
+
+// ── Manual / USB search ────────────────────────────────────────
+function scanSearch() {
+  const val = ($('scan-order-input').value||'').trim();
+  if (!val) { toast('⚠️ ' + (T('scan.status.idle')||'Enter an order number first.')); return; }
+  scanLookup(val);
+}
+
+// ── Proceed to Print ───────────────────────────────────────────
+function scanProceedToPrint() {
+  if (!Scan.tpl || !Scan.order) return;
+  nav('print');
+  setTimeout(() => {
+    $('print-sel').value = Scan.tpl.id;
+    loadPrintTpl();
+    // Override variable inputs with auto-mapped values
+    Scan.varMap.forEach(v => {
+      const inp = $('vf-' + v.varName);
+      if (inp) inp.value = v.value;
+    });
+    // Show order banner on print screen
+    showScanOrderBanner();
+  }, 100);
+}
+
+// ── Scanned-order banner on Print screen ─────────────────────
+function showScanOrderBanner() {
+  let banner = $('scan-order-banner');
+  if (banner) banner.remove(); // remove stale banner if navigated back
+  const o = Scan.order; if (!o) return;
+  banner = document.createElement('div');
+  banner.id = 'scan-order-banner';
+  banner.style.cssText = [
+    'background:#fff4ce','border:1px solid #ffcd6b','border-radius:6px',
+    'padding:8px 14px','font-size:12px','display:flex','align-items:center',
+    'justify-content:space-between','flex-shrink:0','margin-bottom:4px'
+  ].join(';');
+  banner.innerHTML = `<span>📦 Order: <b>${esc(o.orderNum)}</b> &nbsp;|&nbsp;`
+    + ` SKU: <b>${esc(o.sku)}</b> &nbsp;|&nbsp; ${esc(o.productName)}`
+    + ` &nbsp;|&nbsp; Qty: ${o.quantity} &nbsp;|&nbsp; ${esc(o.customer)}</span>`
+    + `<button class="btn btn-ghost btn-xs" onclick="clearScanOrderBanner()" style="flex-shrink:0;margin-left:12px;">✕</button>`;
+  const hdr = document.querySelector('#screen-print .print-hdr');
+  if (hdr) hdr.insertAdjacentElement('afterend', banner);
+}
+
+function clearScanOrderBanner() {
+  const b = $('scan-order-banner'); if (b) b.remove();
+  Scan.order = null; Scan.tpl = null;
+}
+
+// ── Camera scanning ────────────────────────────────────────────
+async function toggleCamera() {
+  if (Scan.cameraRunning) { stopCamera(); return; }
+  await startCamera();
+}
+
+async function startCamera() {
+  const btn    = $('scan-camera-btn');
+  const video  = $('scan-video');
+  const ph     = $('scan-placeholder');
+  const finder = $('scan-finder');
+  const camSt  = $('scan-cam-status');
+
+  if (!('BarcodeDetector' in window)) {
+    $('no-barcode-api').style.display = '';
+    return;
+  }
+  try {
+    Scan.cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
+    });
+    video.srcObject = Scan.cameraStream;
+    video.style.display = 'block';
+    ph.style.display     = 'none';
+    finder.style.display = '';
+    btn.textContent      = T('scan.cam.stop') || '⏹ Stop Camera';
+    Scan.cameraRunning   = true;
+    camSt.textContent    = '🎥 Camera active — point at barcode';
+
+    Scan.cameraDetector = new BarcodeDetector({
+      formats: ['qr_code','code_128','code_39','ean_13','ean_8','upc_a','upc_e','data_matrix','pdf417','aztec']
+    });
+    scanFrame();
+  } catch (e) {
+    camSt.textContent = '❌ Camera error: ' + e.message;
+  }
+}
+
+function stopCamera() {
+  if (Scan.cameraFrame) { cancelAnimationFrame(Scan.cameraFrame); Scan.cameraFrame = null; }
+  if (Scan.cameraStream) { Scan.cameraStream.getTracks().forEach(t=>t.stop()); Scan.cameraStream = null; }
+  const video = $('scan-video');
+  video.srcObject = null; video.style.display = 'none';
+  $('scan-placeholder').style.display = '';
+  $('scan-finder').style.display      = 'none';
+  $('scan-camera-btn').textContent    = T('scan.cam.start') || '▶ Start Camera';
+  $('scan-cam-status').textContent    = '';
+  Scan.cameraRunning = false;
+}
+
+async function scanFrame() {
+  if (!Scan.cameraRunning || !Scan.cameraDetector) return;
+  const video = $('scan-video');
+  try {
+    if (video.readyState >= 2) {
+      const codes = await Scan.cameraDetector.detect(video);
+      if (codes.length > 0) {
+        const val = codes[0].rawValue;
+        $('scan-cam-status').textContent = '✅ Barcode: ' + val;
+        stopCamera();
+        $('scan-order-input').value = val;
+        scanLookup(val);
+        return;
+      }
+    }
+  } catch (_) { /* frame not ready */ }
+  Scan.cameraFrame = requestAnimationFrame(scanFrame);
+}
+
+// Stop camera when leaving scan screen
+const _navOrig = nav;
+nav = function(screen) {
+  if (Scan.cameraRunning && screen !== 'scan') stopCamera();
+  _navOrig(screen);
+  // Refresh scan status text when returning to scan
+  if (screen === 'scan') setScanStatus(Scan.status || 'idle');
+};
+
+// ─── INIT ─────────────────────────────────────────────────────
+newTpl();
+onSizeChange();   // sync DPI hint with default 600×400
+updateStats();
+// Seed the var-wrap placeholder in the correct language
+(function(){ const el=$('var-wrap'); if(el && !el.children.length) el.innerHTML='<div style="color:var(--text2);font-size:13px;font-style:italic;">'+T('dyn.selFirst')+'</div>'; })();
+// Initialise DPI selector + hint
+updateDPIHint();
+</script>
+</body>
+</html>
