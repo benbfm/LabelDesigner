@@ -1628,8 +1628,10 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
 function toast(msg, dur=2200) {
-  const t = $('toast'); t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
+  const t = $('toast');
+  clearTimeout(t._tid);            // cancel any in-flight dismiss so new toast isn't hidden early
+  t.textContent = msg; t.classList.add('show');
+  t._tid = setTimeout(() => t.classList.remove('show'), dur);
 }
 
 function getScale() {
@@ -1706,6 +1708,11 @@ function alignElem(dir) {
 
 // ─── KEYBOARD SHORTCUTS ───────────────────────────────────────
 document.addEventListener('keydown', ev => {
+  // Escape closes any open modal regardless of current screen
+  if (ev.key === 'Escape') {
+    if ($('import-modal-bg').classList.contains('open')) { closeImportModal(); ev.preventDefault(); return; }
+    if ($('zpl-modal-bg').classList.contains('open'))   { closeModal();       ev.preventDefault(); return; }
+  }
   if (S.screen !== 'designer') return;
   if (['INPUT','TEXTAREA','SELECT'].includes(ev.target.tagName)) return;
 
@@ -1820,7 +1827,10 @@ function loadTpl(id) {
 
 function delTpl(id) {
   if (!confirm(T('confirm.delTpl'))) return;
-  setTpls(getTpls().filter(t=>t.id!==id));
+  const remaining = getTpls().filter(t => t.id !== id);
+  if (!remaining.length) { toast('⚠️ Cannot delete the last template.'); return; }
+  setTpls(remaining);
+  if (S.tplId === id) S.tplId = null;
   rLib();
   toast(T('toast.deleted'));
 }
@@ -2131,6 +2141,7 @@ function changeType(newType) {
   e.width        = d.width        ?? e.width;
   e.height       = d.height       ?? e.height;
   if (['CODE128','EAN13','UPCA'].includes(newType)) e.showValue = d.showValue ?? true;
+  else e.showValue = false;  // non-1D types do not support human-readable text below barcode
   // Keep position, content and variable settings unchanged
   rCanvas(); rTable(); showProps(e);
 }
@@ -2374,6 +2385,7 @@ function doImportZPL() {
   S.nextId = S.elems.reduce((m, e) => Math.max(m, +(e.id.slice(1)) || 0), 0) + 1;
   S.selId  = S.elems.length > 0 ? S.elems[0].id : null;
   S.tplId  = null;  // unsaved after import
+  if ($('tpl-linked-sku')) $('tpl-linked-sku').value = '';  // clear stale SKU from previous template
 
   rCanvas(); rTable();
   if (S.selId) showProps(S.elems[0]); else showEmpty();
@@ -2656,7 +2668,6 @@ const Scan = {
   cameraDetector: null,  // BarcodeDetector instance (Path A)
   zxingReader:    null,  // ZXing reader instance (Path B)
   scanTimer:      null,  // setInterval handle for decode loop
-  decodeCanvas:   null,  // offscreen canvas for frame capture
   _decoding:      false, // mutex — prevents concurrent decode calls
 };
 
@@ -2761,17 +2772,23 @@ function scanSearch() {
 function scanProceedToPrint() {
   if (!Scan.tpl || !Scan.order) return;
   nav('print');
+  // Use setTimeout(0) to yield to the browser so nav() can finish its DOM updates,
+  // then requestAnimationFrame to wait for the layout pass before we query input elements.
+  // This is more reliable than a fixed 100 ms delay, which can fire before the print
+  // screen's variable inputs exist on slow devices.
   setTimeout(() => {
     $('print-sel').value = Scan.tpl.id;
     loadPrintTpl();
-    // Override variable inputs with auto-mapped values
-    Scan.varMap.forEach(v => {
-      const inp = $('vf-' + v.varName);
-      if (inp) inp.value = v.value;
+    // Override variable inputs with auto-mapped values after one paint cycle
+    requestAnimationFrame(() => {
+      Scan.varMap.forEach(v => {
+        const inp = $('vf-' + v.varName);
+        if (inp) inp.value = v.value;
+      });
+      // Show order banner on print screen
+      showScanOrderBanner();
     });
-    // Show order banner on print screen
-    showScanOrderBanner();
-  }, 100);
+  }, 0);
 }
 
 // ── Scanned-order banner on Print screen ─────────────────────
@@ -2801,25 +2818,22 @@ function clearScanOrderBanner() {
 
 // ── Camera scanning ─────────────────────────────────────────────────────────
 //
-// Architecture: one shared stream-acquisition + canvas-based decode loop.
+// Architecture: shared getUserMedia stream → video element → setInterval decode.
 //
-// WHY CANVAS? Both BarcodeDetector and ZXing are unreliable when given the
-// <video> element directly on mobile:
-//   • BarcodeDetector on live MediaStream: readyState can stay at 2 even
-//     while streaming, causing some implementations to return empty results.
-//   • ZXing decodeFromVideoElement: internally calls isVideoPlaying() which
-//     requires video.currentTime > 0.  On iOS Safari, currentTime is 0 for
-//     several seconds after a MediaStream starts → ZXing exits its loop
-//     immediately without ever decoding a frame.
+// Path A — BarcodeDetector (Chrome / Edge / Android Chrome / Safari 17+):
+//   detect(videoElement) — async, returns Promise<DetectedBarcode[]>.
+//   BarcodeDetector captures the current frame from a playing video natively.
 //
-// FIX: We acquire the stream ourselves, draw each frame to an offscreen
-// canvas with ctx.drawImage(), then pass the canvas to the decoder.
-// Canvas pixel data is always available regardless of readyState or
-// currentTime, so both decoders work reliably.
+// Path B — ZXing 0.21.3 (iOS Safari < 17, Firefox, older browsers):
+//   decode(videoElement) — synchronous, returns Result or throws NotFoundException.
+//   ZXing draws the current video frame to its own internal canvas and runs the
+//   multi-format barcode decoder on the pixel data directly.
+//   NOTE: decode() accepts HTMLImageElement | HTMLVideoElement only — do NOT
+//   pass a canvas element; it will silently fail with a swallowed TypeError.
 //
 // DECODE LOOP: setInterval every 250 ms (4 fps) — fast enough to catch a
 // barcode held still for ~1 s, slow enough not to overload mobile CPU.
-// A _decoding mutex prevents concurrent overlapping decode calls.
+// A _decoding mutex prevents concurrent overlapping async/sync decode calls.
 
 async function toggleCamera() {
   if (Scan.cameraRunning) { stopCamera(); return; }
@@ -2846,6 +2860,9 @@ async function startCamera() {
     $('no-barcode-api').style.display = '';
     return;
   }
+
+  // Hide the "no barcode API" warning in case it was shown on a previous attempt
+  $('no-barcode-api').style.display = 'none';
 
   camSt.textContent = '📷 Starting camera…';
 
@@ -2896,11 +2913,9 @@ async function startCamera() {
       Scan.zxingReader = new ZXing.BrowserMultiFormatReader();
     }
 
-    // ── Step 7: prepare offscreen canvas ────────────────────────────────────
-    Scan.decodeCanvas = document.createElement('canvas');
-    Scan._decoding    = false;
+    Scan._decoding = false;
 
-    // ── Step 8: start decode loop (setInterval — predictable timing) ─────────
+    // ── Step 7: start decode loop (setInterval — predictable timing) ─────────
     Scan.scanTimer = setInterval(scanFrameTick, 250);
 
   } catch (e) {
@@ -2917,49 +2932,63 @@ async function startCamera() {
 }
 
 // ── Decode loop tick (runs every 250 ms via setInterval) ──────────────────
+//
+// Why we decode from the <video> element directly (not an offscreen canvas):
+//
+//   • ZXing 0.21.3 decode() accepts only HTMLImageElement | HTMLVideoElement.
+//     Passing a canvas element causes a silent TypeError that the catch swallows,
+//     so ZXing would never decode anything.
+//
+//   • video.videoWidth can be 0 on iOS Safari even while the live feed is
+//     visibly playing, making the old "!videoWidth → skip" guard block every
+//     single tick. Using readyState >= 2 is the correct liveness check.
+//
+//   • BarcodeDetector.detect(video) is explicitly supported and works on all
+//     desktop browsers. It captures the current frame internally.
+//
+//   • ZXing.decode(video) internally draws the video to its own canvas and
+//     decodes the pixels — no manual canvas needed.
 function scanFrameTick() {
   if (!Scan.cameraRunning || Scan._decoding) return;
 
   const video = $('scan-video');
-  // videoWidth is 0 until the first frame arrives — skip until we have pixels
-  if (!video || !video.videoWidth) return;
-
-  // Draw current video frame to offscreen canvas
-  const w = video.videoWidth, h = video.videoHeight;
-  if (Scan.decodeCanvas.width  !== w) Scan.decodeCanvas.width  = w;
-  if (Scan.decodeCanvas.height !== h) Scan.decodeCanvas.height = h;
-  try {
-    Scan.decodeCanvas.getContext('2d').drawImage(video, 0, 0, w, h);
-  } catch (_) { return; } // drawImage can throw if video not ready
+  // readyState < 2 means no frame data yet (HAVE_NOTHING / HAVE_METADATA).
+  // readyState 2+ means at least one frame is available to read.
+  if (!video || video.readyState < 2) return;
 
   Scan._decoding = true;
 
   if (Scan.cameraDetector) {
     // ── Path A: BarcodeDetector (Chrome / Edge / Android Chrome / Safari 17+) ──
-    // detect(canvas) is more reliable than detect(video) for live MediaStream.
-    Scan.cameraDetector.detect(Scan.decodeCanvas)
+    // detect(videoElement) captures the current frame and returns detections.
+    Scan.cameraDetector.detect(video)
       .then(codes => {
-        Scan._decoding = false;
-        if (codes.length > 0 && Scan.cameraRunning) {
-          onBarcodeFound(codes[0].rawValue);
+        try {
+          if (codes.length > 0 && Scan.cameraRunning) {
+            onBarcodeFound(codes[0].rawValue);
+          }
+        } finally {
+          Scan._decoding = false;  // always release mutex, even if onBarcodeFound throws
         }
       })
       .catch(() => { Scan._decoding = false; });
 
   } else if (Scan.zxingReader) {
     // ── Path B: ZXing (iOS Safari < 17, Firefox, older browsers) ────────────
-    // decode(canvas) is synchronous and bypasses ZXing's isVideoPlaying()
-    // check (which requires currentTime > 0 — unreliable for MediaStream on iOS).
+    // decode(videoElement) is synchronous. ZXing draws the current video frame
+    // to its own internal canvas and runs the barcode decoder on the pixels.
+    // This bypasses decodeFromVideoElement's isVideoPlaying() check, which
+    // requires video.currentTime > 0 — unreliable on iOS Safari MediaStreams.
     try {
-      const result = Scan.zxingReader.decode(Scan.decodeCanvas);
+      const result = Scan.zxingReader.decode(video);
       Scan._decoding = false;
       if (result && Scan.cameraRunning) onBarcodeFound(result.getText());
     } catch (e) {
       Scan._decoding = false;
-      // ZXing throws NotFoundException for every blank frame — expected, ignore.
-      // Any other error type is a real problem worth logging.
+      // NotFoundException fires on every blank frame — expected, do not log.
+      // Any other error means a real problem; log name + message to console.
       if (e && e.name && e.name !== 'NotFoundException') {
-        console.warn('ZXing decode error:', e.name, e.message);
+        console.warn('[ZXing] decode error:', e.name, e.message);
       }
     }
   }
@@ -2967,6 +2996,7 @@ function scanFrameTick() {
 
 // ── Called when a barcode value is successfully decoded ───────────────────
 function onBarcodeFound(val) {
+  val = (val || '').trim();  // strip stray whitespace / newlines from raw barcode bytes
   $('scan-cam-status').textContent = '✅ Barcode: ' + val;
   stopCamera();
   $('scan-order-input').value = val;
@@ -2988,7 +3018,6 @@ function stopCamera() {
   Scan.cameraRunning   = false;
   Scan.cameraDetector  = null;
   Scan._decoding       = false;
-  Scan.decodeCanvas    = null;
 }
 
 // Stop camera when leaving scan screen
