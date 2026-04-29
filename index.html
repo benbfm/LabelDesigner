@@ -2835,21 +2835,23 @@ async function startCamera() {
   try {
     if (hasBD) {
       // ── Path A: BarcodeDetector (Chrome / Edge / Android Chrome / Safari 17+) ──
-      // Bug fix: use {ideal:'environment'} not the string 'environment' — the string
-      // form is treated as {exact:'environment'} which throws OverconstrainedError on
-      // devices where the back camera label doesn't exactly match (common on Android).
+      // {ideal:'environment'} is a soft constraint — never throws OverconstrainedError.
       Scan.cameraStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: {ideal:'environment'}, width: {ideal:1280}, height: {ideal:720} }
       });
       video.srcObject = Scan.cameraStream;
 
-      // Wait for the first frame. 'playing' fires after the first decoded frame —
-      // that's when readyState >= 2 and BarcodeDetector.detect() will succeed.
+      // iOS Safari fires 'canplay' / 'loadedmetadata' more reliably than 'playing'.
+      // We wait for any of those three events, or fall back after 8 s.
       await new Promise((resolve, reject) => {
-        video.addEventListener('playing', resolve, { once: true });
+        const done = () => { resolve(); };
+        video.addEventListener('playing',       done, { once: true });
+        video.addEventListener('canplay',       done, { once: true });
+        video.addEventListener('loadedmetadata',done, { once: true });
         video.addEventListener('error', () => reject(new Error('Video element error')), { once: true });
-        video.play().catch(reject);
-        setTimeout(() => reject(new Error('Camera timed out — no video after 10 s')), 10000);
+        // play() returns a promise; on iOS autoplay+playsinline+muted may auto-start
+        video.play().catch(() => {}); // ignore NotAllowedError — autoplay handles it
+        setTimeout(resolve, 8000); // give up waiting and proceed anyway
       });
 
       video.style.display = 'block';
@@ -2866,50 +2868,68 @@ async function startCamera() {
       scanFrame();
 
     } else {
-      // ── Path B: ZXing-js (iOS Safari, Firefox, older browsers) ───────────
-      // Bug fix 1: Don't enumerate devices to find back camera — on iOS, device
-      // labels are empty strings until AFTER permission is granted, so the
-      // /back|rear|environment/ regex never matches and we get the front camera.
-      // Instead, pass facingMode:{ideal:'environment'} directly as a constraint.
+      // ── Path B: ZXing-js (iOS Safari < 17, Firefox, older browsers) ──────────
       //
-      // Bug fix 2: Show camera UI via 'playing' event WITH a 4 s timeout fallback —
-      // some iOS versions don't reliably fire 'playing' on the injected srcObject.
+      // ROOT CAUSE OF PRIOR MOBILE FAILURE — two bugs:
+      //
+      // Bug 1 — decodeFromConstraints calls getUserMedia + video.play() internally
+      //   inside a promise callback, which is no longer inside a user-gesture stack
+      //   on older iOS Safari. iOS may silently block the play() call, so the video
+      //   never starts and the callback never fires.
+      //
+      // Bug 2 — The 4-second setTimeout(showCameraUI) fired even after an error:
+      //   decodeFromConstraints .catch() sets cameraRunning=false, but the timer
+      //   checks `if (Scan.cameraRunning) return;` — it's false — so it proceeds
+      //   and incorrectly shows "Camera active" 4 s after the error.
+      //
+      // FIX: Call getUserMedia ourselves (stays in user-gesture context), attach
+      // the stream to the video element, show UI immediately, then hand the
+      // already-playing video element to ZXing's decodeFromVideoElement.
+      // No timer needed — UI is shown synchronously after stream acquisition.
+
       Scan.zxingReader = new ZXing.BrowserMultiFormatReader();
 
-      // Show camera UI when video starts playing (or after 4 s fallback)
-      const showCameraUI = () => {
-        if (Scan.cameraRunning) return; // already shown
-        video.style.display  = 'block';
-        ph.style.display      = 'none';
-        finder.style.display  = '';
-        btn.textContent       = T('scan.cam.stop') || '⏹ Stop Camera';
-        Scan.cameraRunning    = true;
-        camSt.textContent     = '🎥 Camera active — point barcode at the finder box';
-      };
-      video.addEventListener('playing', showCameraUI, { once: true });
-      setTimeout(showCameraUI, 4000); // fallback if 'playing' never fires
-
-      // Use constraints-based API to reliably select back camera on mobile.
-      // ZXing.NotFoundException fires on every empty frame — safe to ignore.
-      Scan.zxingReader.decodeFromConstraints(
-        { video: { facingMode: {ideal:'environment'}, width: {ideal:1280}, height: {ideal:720} } },
-        video,
-        (result, err) => {
-          if (result && Scan.cameraRunning) {
-            const val = result.getText();
-            $('scan-cam-status').textContent = '✅ Barcode: ' + val;
-            stopCamera();
-            $('scan-order-input').value = val;
-            scanLookup(val);
-          }
-        }
-      ).catch(e => {
-        camSt.textContent  = '❌ Camera error: ' + (e.message || e);
-        Scan.cameraRunning = false;
+      // Step 1 — acquire stream ourselves (preserves user-gesture context on iOS)
+      Scan.cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: {ideal:'environment'}, width: {ideal:1280}, height: {ideal:720} }
       });
 
-      btn.textContent   = T('scan.cam.stop') || '⏹ Stop Camera';
-      camSt.textContent = '📷 Starting camera…';
+      // Step 2 — attach stream; autoplay+playsinline+muted on <video> starts it
+      video.srcObject = Scan.cameraStream;
+
+      // Step 3 — explicit play() as safety net (no-op if autoplay already ran;
+      //   swallow error — iOS may reject if it considers the stream already playing)
+      try { await video.play(); } catch (_) {}
+
+      // Step 4 — wait for metadata so ZXing has valid frame dimensions (max 4 s)
+      if (video.readyState < 1) {
+        await new Promise(resolve => {
+          video.addEventListener('loadedmetadata', resolve, { once: true });
+          video.addEventListener('canplay',        resolve, { once: true });
+          setTimeout(resolve, 4000);
+        });
+      }
+
+      // Step 5 — show camera UI (no timers, no events — we already have the stream)
+      video.style.display  = 'block';
+      ph.style.display     = 'none';
+      finder.style.display = '';
+      btn.textContent      = T('scan.cam.stop') || '⏹ Stop Camera';
+      Scan.cameraRunning   = true;
+      camSt.textContent    = '🎥 Camera active — point barcode at the finder box';
+
+      // Step 6 — start continuous decode (ZXing polls frames from the playing video;
+      //   NotFoundException fires on every blank frame and should be ignored)
+      Scan.zxingReader.decodeFromVideoElement(video, (result, _err) => {
+        if (result && Scan.cameraRunning) {
+          const val = result.getText();
+          camSt.textContent = '✅ Barcode: ' + val;
+          stopCamera();
+          $('scan-order-input').value = val;
+          scanLookup(val);
+        }
+        // NotFoundException on blank frames is expected — do NOT display it
+      });
     }
   } catch (e) {
     // Provide a more helpful message for common mobile errors
