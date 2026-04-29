@@ -2349,8 +2349,18 @@ async function startCamera() {
         video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
       });
       video.srcObject = Scan.cameraStream;
-      // Explicit play() is required on mobile — autoplay attribute alone is not enough
-      await video.play().catch(() => {});
+
+      // Wait for video to actually start playing, not just for play() to be called.
+      // play() on mobile returns a promise that resolves when playback STARTS, but
+      // readyState may still be < 2 at that point. The 'playing' event fires only
+      // after the first frame is decoded — that's when detect() will succeed.
+      await new Promise((resolve, reject) => {
+        video.addEventListener('playing', resolve, { once: true });
+        video.addEventListener('error', () => reject(new Error('Video element error')), { once: true });
+        video.play().catch(reject);
+        setTimeout(() => reject(new Error('Camera timed out — no video after 8 s')), 8000);
+      });
+
       video.style.display = 'block';
       ph.style.display     = 'none';
       finder.style.display = '';
@@ -2366,7 +2376,19 @@ async function startCamera() {
 
     } else {
       // ── Path B: ZXing-js (iOS Safari, Firefox, older browsers) ───────────
+      // IMPORTANT: decodeFromVideoDevice() resolves only when the FIRST barcode
+      // is detected — never await it. Show the camera UI via the 'playing' event
+      // instead, which fires as soon as the video feed becomes visible.
       Scan.zxingReader = new ZXing.BrowserMultiFormatReader();
+
+      video.addEventListener('playing', () => {
+        video.style.display = 'block';
+        ph.style.display     = 'none';
+        finder.style.display = '';
+        btn.textContent      = T('scan.cam.stop') || '⏹ Stop Camera';
+        Scan.cameraRunning   = true;
+        camSt.textContent    = '🎥 Camera active — point barcode at the finder box';
+      }, { once: true });
 
       // Prefer environment-facing (back) camera on mobile
       let deviceId;
@@ -2376,24 +2398,24 @@ async function startCamera() {
         deviceId      = back ? back.deviceId : (devices[devices.length - 1]?.deviceId);
       } catch (_) { /* deviceId stays undefined — browser picks default */ }
 
-      // ZXing manages the stream itself; pass the video element as the render target
-      await Scan.zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
-        if (result) {
+      // Fire-and-forget — ZXing manages the stream and calls the callback for every frame.
+      // ZXing.NotFoundException fires on every empty frame and is safe to ignore.
+      Scan.zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
+        if (result && Scan.cameraRunning) {
           const val = result.getText();
           $('scan-cam-status').textContent = '✅ Barcode: ' + val;
           stopCamera();
           $('scan-order-input').value = val;
           scanLookup(val);
         }
-        // ZXing.NotFoundException is expected while no barcode is in frame — ignore it
+      }).catch(e => {
+        camSt.textContent  = '❌ Camera error: ' + (e.message || e);
+        Scan.cameraRunning = false;
       });
 
-      video.style.display = 'block';
-      ph.style.display     = 'none';
-      finder.style.display = '';
-      btn.textContent      = T('scan.cam.stop') || '⏹ Stop Camera';
-      Scan.cameraRunning   = true;
-      camSt.textContent    = '🎥 Camera active — point barcode at the finder box';
+      // Show interim status while ZXing initialises the stream
+      btn.textContent   = T('scan.cam.stop') || '⏹ Stop Camera';
+      camSt.textContent = '📷 Starting camera…';
     }
   } catch (e) {
     camSt.textContent = '❌ Camera error: ' + e.message;
