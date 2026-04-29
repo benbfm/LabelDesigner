@@ -11,7 +11,7 @@
   --primary:#B4641E;--primary-h:#9A5419;--primary-p:#7D4315;--primary-l:#FFF3DC;--primary-c:#F5DEB3;
   --surface:#FFFDF8;--surface-alt:#FFF8F0;--bg:#FFF5E6;
   --border:#D2B48C;--text:#2C1A0E;--text2:#6E5035;--text3:#A58055;
-  --danger:#a4262c;--danger-h:#8e1b20;--success:#107c10;
+  --danger:#a4262c;--danger-h:#8e1b20;--success:#107c10;--accent:#B4641E;
   --nav:48px;--lsb:220px;--rsb:262px;
   --r:4px;--sh:0 1.6px 3.6px rgba(0,0,0,.13),0 .3px .9px rgba(0,0,0,.11);
   --shl:0 6.4px 14.4px rgba(0,0,0,.13),0 1.2px 3.6px rgba(0,0,0,.11);
@@ -112,7 +112,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--primary);}
 #canvas-zoom-bar .zoom-btn{width:28px;height:28px;font-size:16px;font-weight:700;line-height:1;padding:0;
   border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--bg);color:var(--text);}
 #canvas-zoom-bar .zoom-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
-#zoom-pct{font-size:13px;font-weight:600;color:var(--text-muted);min-width:42px;text-align:center;}
+#zoom-pct{font-size:13px;font-weight:600;color:var(--text3);min-width:42px;text-align:center;}
 .zoom-divider{width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;}
 .undo-btn{width:28px;height:28px;font-size:14px;line-height:1;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--bg);color:var(--text);}
 .undo-btn:hover:not(:disabled){background:var(--primary);color:#fff;border-color:var(--primary);}
@@ -259,6 +259,42 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--primary);}
 
 /* ════════════════ SCAN & PRINT ════════════════ */
 #screen-scan{flex-direction:column;padding:20px 24px;gap:16px;overflow:hidden;}
+
+/* ════════════════ HELP SCREEN ════════════════ */
+#screen-help{flex-direction:column;overflow:hidden;}
+.htabs{display:flex;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.htabs::-webkit-scrollbar{display:none;}
+.htab{padding:10px 18px;font-size:13px;cursor:pointer;border:none;border-bottom:3px solid transparent;background:none;font-family:inherit;color:var(--text);white-space:nowrap;transition:all .15s;}
+.htab.active{border-bottom-color:var(--accent);font-weight:700;color:var(--accent);}
+.htab:hover:not(.active){background:var(--bg);}
+.hcontent{flex:1;overflow-y:auto;padding:24px 32px;}
+.hpanel{display:none;}.hpanel.active{display:block;}
+.hero-help{background:linear-gradient(135deg,#141626,#2a3060);border-radius:10px;padding:22px 26px;color:#fff;margin-bottom:22px;}
+.hero-help h2{font-size:18px;font-weight:700;margin-bottom:6px;}
+.hero-help p{font-size:13px;color:#c0c8e8;line-height:1.6;}
+.hsh{font-size:13.5px;font-weight:700;color:#141626;margin:20px 0 10px;border-left:4px solid var(--accent);padding-left:10px;}
+.hstep{background:#fff;border:1px solid var(--border);border-radius:8px;padding:13px 15px;display:flex;gap:13px;align-items:flex-start;margin-bottom:9px;}
+.hstep-num{background:var(--accent);color:#141626;font-weight:800;font-size:12px;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.hstep-body{flex:1;font-size:13px;line-height:1.6;}
+.hstep-detail{font-size:11.5px;color:#4a5580;margin-top:5px;background:#f0f4ff;padding:5px 9px;border-radius:5px;}
+.htip{background:#fffbea;border-left:4px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:12.5px;line-height:1.6;margin:14px 0;}
+.hwarn{background:#fff3f3;border-left:4px solid #e53e3e;border-radius:6px;padding:10px 14px;font-size:12.5px;line-height:1.6;margin:14px 0;}
+code.hcode,kbd.hcode{background:#e8eaf0;border:1px solid #b0b8d0;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;}
+.hflow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 20px;padding:14px 16px;background:#f6f7ff;border-radius:8px;border:1px solid #d0d5f0;}
+.hflow-step{padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;}
+.hflow-arrow{color:#888;font-size:16px;font-weight:300;}
+.hinfo{background:#eef4ff;border-left:4px solid #3B5BDB;border-radius:6px;padding:10px 14px;font-size:12.5px;line-height:1.6;margin:14px 0;}
+.htable{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0 16px;}
+.htable th{background:#141626;color:#fff;padding:7px 10px;text-align:left;font-size:12px;}
+.htable td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+.htable tr:nth-child(even) td{background:var(--bg);}
+.htag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.htag-a{background:#fff3cc;color:#7a4f00;}.htag-b{background:#e0e8ff;color:#2a3a99;}
+.htag-g{background:#e0f5e9;color:#1a6b3a;}.htag-r{background:#ffe0e0;color:#8b1a1a;}
+/* ── Bilingual content toggle ── */
+[data-lang="zh"]{display:none;}
+body.zh-mode [data-lang="en"]{display:none;}
+body.zh-mode [data-lang="zh"]{display:revert;}
 .scan-hdr{display:flex;align-items:center;gap:12px;flex-shrink:0;}
 .scan-hdr h2{font-size:20px;font-weight:700;}
 #scan-body{display:flex;gap:20px;flex:1;overflow:hidden;}
@@ -477,6 +513,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--primary);}
   <button class="nav-btn" id="nav-library" onclick="nav('library')" data-i18n="nav.library">📂 Templates</button>
   <button class="nav-btn" id="nav-print" onclick="nav('print')" data-i18n="nav.print">🖨️ Print</button>
   <button class="nav-btn" id="nav-scan" onclick="nav('scan')" data-i18n="nav.scan">📷 Scan &amp; Print</button>
+  <button class="nav-btn" id="nav-help" onclick="nav('help')" data-i18n="nav.help">❓ Help</button>
   <div class="nav-spacer"></div>
   <button class="nav-btn" id="lang-btn" onclick="toggleLang()" data-i18n="lang.toggle" style="border:1px solid rgba(255,255,255,.4);padding:4px 12px;font-size:12px;">ZH 中文</button>
 </nav>
@@ -670,6 +707,10 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--primary);}
           <div class="fg" id="pr-mag" style="display:none">
             <label data-i18n="p.mag">QR Magnification (1–10)</label>
             <input type="number" id="p-mag" min="1" max="10" onchange="upd('magnification',+this.value)">
+          </div>
+          <div class="chk" id="pr-showval" style="display:none">
+            <input type="checkbox" id="p-showval" onchange="upd('showValue',this.checked)">
+            <label for="p-showval" data-i18n="p.showval">📋 Show Value Below Barcode (HRI)</label>
           </div>
           <div class="fg" id="pr-content">
             <label data-i18n="p.content">Default Content / Value</label>
@@ -881,8 +922,6 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--primary);}
   </div><!-- #scan-body -->
 </div><!-- #screen-scan -->
 
-</div><!-- #app -->
-
 <!-- Import ZPL Modal -->
 <div id="import-modal-bg">
   <div id="import-modal">
@@ -922,6 +961,404 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--primary);}
   </div>
 </div>
 
+<!-- ═══════════ HELP ═══════════ -->
+<div id="screen-help" class="screen">
+  <div class="htabs">
+    <button class="htab active" id="htab-overview"  onclick="setHelpTab('overview')"><span data-lang="en">🏠 Overview</span><span data-lang="zh">🏠 概览</span></button>
+    <button class="htab"        id="htab-designer"  onclick="setHelpTab('designer')"><span data-lang="en">✏️ Designer</span><span data-lang="zh">✏️ 设计器</span></button>
+    <button class="htab"        id="htab-library"   onclick="setHelpTab('library')"><span data-lang="en">📂 Templates</span><span data-lang="zh">📂 模板库</span></button>
+    <button class="htab"        id="htab-print"     onclick="setHelpTab('print')"><span data-lang="en">🖨️ Print</span><span data-lang="zh">🖨️ 打印</span></button>
+    <button class="htab"        id="htab-scan"      onclick="setHelpTab('scan')"><span data-lang="en">📷 Scan</span><span data-lang="zh">📷 扫描</span></button>
+  </div>
+  <div class="hcontent">
+
+    <!-- ── Overview ── -->
+    <div class="hpanel active" id="hpanel-overview">
+      <div class="hero-help">
+        <h2>ZPL Label Designer</h2>
+        <p data-lang="en">Design, save, and print ZPL barcode labels for Zebra printers. This guide covers everything you need — from first-time setup to daily printing.</p>
+        <p data-lang="zh">为斑马打印机设计、保存并打印 ZPL 条码标签。本指南涵盖从初次配置到日常打印的全部操作。</p>
+      </div>
+
+      <!-- Workflow flow diagram -->
+      <div class="hflow">
+        <div class="hflow-step htag-a">✏️ <span data-lang="en">Design</span><span data-lang="zh">设计</span></div>
+        <div class="hflow-arrow">→</div>
+        <div class="hflow-step htag-b">💾 <span data-lang="en">Save Template</span><span data-lang="zh">保存模板</span></div>
+        <div class="hflow-arrow">→</div>
+        <div class="hflow-step htag-g">🖨️ <span data-lang="en">Print</span><span data-lang="zh">打印</span></div>
+        <div class="hflow-arrow">→</div>
+        <div class="hflow-step htag-r">📷 <span data-lang="en">Scan &amp; Repeat</span><span data-lang="zh">扫描重复</span></div>
+      </div>
+
+      <div class="hsh">🚀 <span data-lang="en">First-Time Setup (do once)</span><span data-lang="zh">初次配置（仅需一次）</span></div>
+      <div class="hstep"><div class="hstep-num">1</div><div class="hstep-body">
+        <span data-lang="en"><b>Design your label</b> — Go to <b>✏️ Designer</b>, set the label size, add text, barcodes, and boxes to build the layout.</span>
+        <span data-lang="zh"><b>设计标签</b> — 前往<b>✏️ 设计器</b>，设置标签尺寸，添加文本、条码和方框，构建标签布局。</span>
+        <div class="hstep-detail"><span data-lang="en">Tip: mark fields that change each print (like order number or product name) as <b>Variables</b> so they can be filled in at print time.</span><span data-lang="zh">提示：将每次打印都会改变的字段（如订单号或产品名称）设为<b>变量</b>，以便打印时逐次填写。</span></div>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">2</div><div class="hstep-body">
+        <span data-lang="en"><b>Save the template</b> — Enter a name and click <b>💾 Save Template</b>. Your design is stored in the browser's local storage and available on the <b>📂 Templates</b> screen.</span>
+        <span data-lang="zh"><b>保存模板</b> — 输入名称后点击<b>💾 保存模板</b>。设计将存储在浏览器本地，并可在<b>📂 模板库</b>界面中查看。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">3</div><div class="hstep-body">
+        <span data-lang="en"><b>Set your printer URL</b> — Go to <b>🖨️ Print</b> and enter the Zebra printer's network address in the <b>Printer URL</b> field. Example: <code class="hcode">http://192.168.1.100:9100</code></span>
+        <span data-lang="zh"><b>配置打印机地址</b> — 前往<b>🖨️ 打印</b>，在<b>打印机地址</b>字段中输入斑马打印机的网络地址，例如：<code class="hcode">http://192.168.1.100:9100</code></span>
+        <div class="hstep-detail"><span data-lang="en">The URL is saved automatically — you only need to enter it once. Ask your IT team for the correct IP and port.</span><span data-lang="zh">地址会自动保存，只需输入一次。请向 IT 团队确认正确的 IP 和端口号。</span></div>
+      </div></div>
+
+      <div class="hsh">📅 <span data-lang="en">Daily Workflow — Printing Labels</span><span data-lang="zh">日常工作流程 — 打印标签</span></div>
+      <div class="hstep"><div class="hstep-num">A</div><div class="hstep-body">
+        <span data-lang="en"><b>Quick print (known values):</b> Go to <b>🖨️ Print</b> → select template → fill in variable values → click <b>⚡ Generate ZPL</b> → click <b>🖨 Send to Printer</b>.</span>
+        <span data-lang="zh"><b>快速打印（已知内容）：</b> 前往<b>🖨️ 打印</b> → 选择模板 → 填写变量值 → 点击<b>⚡ 生成 ZPL</b> → 点击<b>🖨 发送到打印机</b>。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">B</div><div class="hstep-body">
+        <span data-lang="en"><b>Scan-to-print (order fulfilment):</b> Go to <b>📷 Scan &amp; Print</b> → scan the order barcode with a USB gun or camera → the app looks up the order and fills the template automatically → click <b>Proceed to Print →</b>.</span>
+        <span data-lang="zh"><b>扫描打印（订单发货）：</b> 前往<b>📷 扫描打印</b> → 使用 USB 扫描枪或摄像头扫描订单条码 → 应用自动查询订单并填写模板 → 点击<b>前往打印 →</b>。</span>
+      </div></div>
+
+      <div class="hsh">📋 <span data-lang="en">Screen Guide</span><span data-lang="zh">界面说明</span></div>
+      <table class="htable">
+        <thead><tr>
+          <th><span data-lang="en">Screen</span><span data-lang="zh">界面</span></th>
+          <th><span data-lang="en">What you can do</span><span data-lang="zh">可以做什么</span></th>
+          <th><span data-lang="en">When to use</span><span data-lang="zh">何时使用</span></th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><b>✏️ <span data-lang="en">Designer</span><span data-lang="zh">设计器</span></b></td>
+            <td><span data-lang="en">Drag elements, set barcode types, define variable fields, preview ZPL code</span><span data-lang="zh">拖动元素、设置条码类型、定义变量字段、预览 ZPL 代码</span></td>
+            <td><span class="htag htag-a"><span data-lang="en">Setup / Edit templates</span><span data-lang="zh">配置 / 编辑模板</span></span></td>
+          </tr>
+          <tr>
+            <td><b>📂 <span data-lang="en">Templates</span><span data-lang="zh">模板库</span></b></td>
+            <td><span data-lang="en">Browse saved templates, search by name, open for editing, duplicate, or delete</span><span data-lang="zh">浏览已保存模板、按名称搜索、打开编辑、复制或删除</span></td>
+            <td><span class="htag htag-b"><span data-lang="en">Manage templates</span><span data-lang="zh">管理模板</span></span></td>
+          </tr>
+          <tr>
+            <td><b>🖨️ <span data-lang="en">Print</span><span data-lang="zh">打印</span></b></td>
+            <td><span data-lang="en">Select a template, fill in variable values, generate &amp; send ZPL, or download the ZPL file</span><span data-lang="zh">选择模板、填写变量值、生成并发送 ZPL，或下载 ZPL 文件</span></td>
+            <td><span class="htag htag-g"><span data-lang="en">Print labels</span><span data-lang="zh">打印标签</span></span></td>
+          </tr>
+          <tr>
+            <td><b>📷 <span data-lang="en">Scan &amp; Print</span><span data-lang="zh">扫描打印</span></b></td>
+            <td><span data-lang="en">Scan an order barcode (USB gun or camera) → auto-fill template variables → one-click print</span><span data-lang="zh">扫描订单条码（USB 扫描枪或摄像头）→ 自动填充模板变量 → 一键打印</span></td>
+            <td><span class="htag htag-r"><span data-lang="en">Order fulfilment</span><span data-lang="zh">订单发货</span></span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="hinfo">🌐 <b><span data-lang="en">Language:</span><span data-lang="zh">语言切换：</span></b>
+        <span data-lang="en">Click the <b>ZH 中文 / EN</b> button in the top-right of the nav bar to switch between English and Chinese at any time.</span>
+        <span data-lang="zh">点击导航栏右上角的 <b>EN / 中文</b> 按钮，可随时在中英文之间切换。</span>
+      </div>
+      <div class="htip">💡 <b><span data-lang="en">All data is stored locally in your browser.</span><span data-lang="zh">所有数据均保存在本地浏览器中。</span></b>
+        <span data-lang="en"> Templates and settings are saved automatically — no internet connection required for designing and printing.</span>
+        <span data-lang="zh"> 模板和设置自动保存，设计和打印无需联网。</span>
+      </div>
+    </div>
+
+    <!-- ── Designer ── -->
+    <div class="hpanel" id="hpanel-designer">
+
+      <div class="hsh">📐 <span data-lang="en">Step 1 — Set the Label Size</span><span data-lang="zh">第 1 步 — 设置标签尺寸</span></div>
+      <div class="hstep"><div class="hstep-num">1</div><div class="hstep-body">
+        <span data-lang="en">In the left sidebar under <b>Label Size</b>, choose a <b>Preset</b> from the dropdown (common Zebra sizes) or enter <b>Width</b> and <b>Height</b> manually in dots.</span>
+        <span data-lang="zh">在左侧边栏<b>标签尺寸</b>区域，从下拉列表选择<b>预设尺寸</b>（常用斑马尺寸），或手动输入<b>宽度</b>和<b>高度</b>（单位：点）。</span>
+        <div class="hstep-detail"><span data-lang="en">At 203 DPI: 8 dots ≈ 1 mm. Example — 4×2 inch label = 812×406 dots.</span><span data-lang="zh">203 DPI 下：8 点 ≈ 1 毫米。示例：4×2 英寸标签 = 812×406 点。</span></div>
+      </div></div>
+
+      <div class="hsh">➕ <span data-lang="en">Step 2 — Add &amp; Position Elements</span><span data-lang="zh">第 2 步 — 添加并放置元素</span></div>
+      <div class="hstep"><div class="hstep-num">1</div><div class="hstep-body">
+        <span data-lang="en">Click an <b>Add Element</b> button in the left sidebar. Choose the type that fits your need:</span>
+        <span data-lang="zh">点击左侧边栏中的<b>添加元素</b>按钮，选择适合的类型：</span>
+        <div class="hstep-detail">
+          <span data-lang="en"><b>🅃 Text</b> — static or variable text line &nbsp;|&nbsp; <b>▐▌ Code 128</b> — general-purpose 1D barcode &nbsp;|&nbsp; <b>⊞ QR Code</b> — 2D code (URLs, long text) &nbsp;|&nbsp; <b>||| EAN-13</b> — retail barcode (13 digits) &nbsp;|&nbsp; <b>||| UPC-A</b> — retail barcode (12 digits) &nbsp;|&nbsp; <b>□ Box</b> — border / divider line</span>
+          <span data-lang="zh"><b>🅃 文本</b> — 静态或变量文字 &nbsp;|&nbsp; <b>▐▌ Code 128</b> — 通用一维条码 &nbsp;|&nbsp; <b>⊞ 二维码</b> — 二维码（网址、长文本）&nbsp;|&nbsp; <b>||| EAN-13</b> — 零售条码（13位）&nbsp;|&nbsp; <b>||| UPC-A</b> — 零售条码（12位）&nbsp;|&nbsp; <b>□ 方框</b> — 边框 / 分隔线</span>
+        </div>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">2</div><div class="hstep-body">
+        <span data-lang="en"><b>Drag</b> the element on the white label canvas to position it. You can also type exact <b>X</b> and <b>Y</b> coordinates (in dots) in the right-side properties panel.</span>
+        <span data-lang="zh">在白色标签画布上<b>拖动</b>元素调整位置，也可在右侧属性面板直接输入精确的 <b>X</b>、<b>Y</b> 坐标（单位：点）。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">3</div><div class="hstep-body">
+        <span data-lang="en"><b>Resize</b> by dragging the small handle at the bottom-right corner of a selected element, or edit <b>W</b> / <b>H</b> in the properties panel.</span>
+        <span data-lang="zh">拖动选中元素右下角的小控制柄可以<b>调整大小</b>，也可直接在属性面板中修改<b>宽</b> / <b>高</b>值。</span>
+      </div></div>
+
+      <div class="hsh">🔧 <span data-lang="en">Step 3 — Configure Each Element</span><span data-lang="zh">第 3 步 — 配置每个元素</span></div>
+      <table class="htable">
+        <thead><tr>
+          <th><span data-lang="en">Property</span><span data-lang="zh">属性</span></th>
+          <th><span data-lang="en">What it does</span><span data-lang="zh">说明</span></th>
+          <th><span data-lang="en">Available for</span><span data-lang="zh">适用类型</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><b>X, Y</b></td>
+              <td><span data-lang="en">Distance in dots from the top-left corner of the label</span><span data-lang="zh">距标签左上角的点数距离</span></td>
+              <td><span data-lang="en">All types</span><span data-lang="zh">全部</span></td></tr>
+          <tr><td><b>W, H</b></td>
+              <td><span data-lang="en">Width and height of the element in dots</span><span data-lang="zh">元素的宽度和高度（点数）</span></td>
+              <td><span data-lang="en">All types</span><span data-lang="zh">全部</span></td></tr>
+          <tr><td><b><span data-lang="en">Default Content</span><span data-lang="zh">默认内容</span></b></td>
+              <td><span data-lang="en">The text or barcode value used when no variable is provided at print time</span><span data-lang="zh">打印时未提供变量值时使用的默认文本或条码内容</span></td>
+              <td><span data-lang="en">Text, Barcode</span><span data-lang="zh">文本、条码</span></td></tr>
+          <tr><td><b><span data-lang="en">Orientation</span><span data-lang="zh">打印方向</span></b></td>
+              <td><span data-lang="en"><b>N</b>=Normal &nbsp; <b>R</b>=90° Rotated &nbsp; <b>I</b>=180° Inverted &nbsp; <b>B</b>=270°</span><span data-lang="zh"><b>N</b>=正常 &nbsp; <b>R</b>=旋转90° &nbsp; <b>I</b>=倒置180° &nbsp; <b>B</b>=270°</span></td>
+              <td><span data-lang="en">Text, Barcode</span><span data-lang="zh">文本、条码</span></td></tr>
+          <tr><td><b><span data-lang="en">Show Value (HRI)</span><span data-lang="zh">显示数值(HRI)</span></b></td>
+              <td><span data-lang="en">When checked, the barcode number is printed in human-readable text below the bars. When unchecked, bars only.</span><span data-lang="zh">勾选后，条码号码以人类可读文字形式打印在条形码下方；不勾选则仅显示条形。</span></td>
+              <td><span data-lang="en">Code128, EAN-13, UPC-A</span><span data-lang="zh">Code128、EAN-13、UPC-A</span></td></tr>
+          <tr><td><b>QR Mag</b></td>
+              <td><span data-lang="en">QR code module size: 1 (smallest) → 10 (largest). Larger = easier to scan from distance.</span><span data-lang="zh">二维码模块大小：1（最小）→ 10（最大）。越大越便于远距离扫描。</span></td>
+              <td><span data-lang="en">QR Code only</span><span data-lang="zh">仅二维码</span></td></tr>
+          <tr><td><b><span data-lang="en">Mark as Variable</span><span data-lang="zh">标记为变量</span></b></td>
+              <td><span data-lang="en">Tick this to make the field fillable at print time. The element shows <b>{VariableName}</b> in the preview.</span><span data-lang="zh">勾选后，该字段可在打印时填写内容，预览中显示为 <b>{变量名称}</b>。</span></td>
+              <td><span data-lang="en">Text, Barcode</span><span data-lang="zh">文本、条码</span></td></tr>
+          <tr><td><b><span data-lang="en">Variable Name</span><span data-lang="zh">变量名称</span></b></td>
+              <td><span data-lang="en">The label for this field in the Print screen. Use short, descriptive names — e.g. <i>OrderNo</i>, <i>SKU</i>, <i>CustomerName</i>.</span><span data-lang="zh">该字段在打印界面中显示的标签名。建议使用简短易懂的名称，例如<i>订单号</i>、<i>SKU</i>、<i>客户名称</i>。</span></td>
+              <td><span data-lang="en">When Variable ✓</span><span data-lang="zh">勾选变量后</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="hsh">⌨️ <span data-lang="en">Keyboard Shortcuts</span><span data-lang="zh">键盘快捷键</span></div>
+      <table class="htable">
+        <thead><tr>
+          <th><span data-lang="en">Key</span><span data-lang="zh">按键</span></th>
+          <th><span data-lang="en">Action</span><span data-lang="zh">操作</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><code class="hcode">↑ ↓ ← →</code></td><td><span data-lang="en">Nudge selected element by 1 dot</span><span data-lang="zh">将选中元素移动 1 点</span></td></tr>
+          <tr><td><code class="hcode">Shift + ↑↓←→</code></td><td><span data-lang="en">Nudge by 10 dots</span><span data-lang="zh">移动 10 点</span></td></tr>
+          <tr><td><code class="hcode">Ctrl + Z</code></td><td><span data-lang="en">Undo last change</span><span data-lang="zh">撤销上一步操作</span></td></tr>
+          <tr><td><code class="hcode">Ctrl + Y</code></td><td><span data-lang="en">Redo</span><span data-lang="zh">重做</span></td></tr>
+          <tr><td><code class="hcode">Ctrl + D</code></td><td><span data-lang="en">Duplicate selected element</span><span data-lang="zh">复制选中元素</span></td></tr>
+          <tr><td><code class="hcode">Delete / Backspace</code></td><td><span data-lang="en">Delete selected element</span><span data-lang="zh">删除选中元素</span></td></tr>
+          <tr><td><code class="hcode">G</code></td><td><span data-lang="en">Toggle snap-to-grid (8-dot grid)</span><span data-lang="zh">切换网格吸附（8点网格）</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="hsh">↕️ <span data-lang="en">Reorder Elements</span><span data-lang="zh">调整元素顺序</span></div>
+      <div class="hstep"><div class="hstep-num">▲▼</div><div class="hstep-body">
+        <span data-lang="en">Use the <b>▲</b> / <b>▼</b> buttons in the element list to change the print order. Elements higher in the list print first in the ZPL output.</span>
+        <span data-lang="zh">使用元素列表中的 <b>▲</b> / <b>▼</b> 按钮调整打印顺序。列表靠上的元素在 ZPL 中先打印。</span>
+      </div></div>
+
+      <div class="hwarn">⚠️ <b><span data-lang="en">Remember to save!</span><span data-lang="zh">记得保存！</span></b>
+        <span data-lang="en"> Click <b>💾 Save Template</b> before switching screens. Unsaved changes are lost when you navigate away.</span>
+        <span data-lang="zh"> 切换界面前请点击<b>💾 保存模板</b>。离开界面后未保存的更改将丢失。</span>
+      </div>
+      <div class="htip">💡 <span data-lang="en"><b>Import existing ZPL:</b> Click <b>↓ Import ZPL</b>, paste your ZPL code, and click <b>Parse &amp; Import</b>. All elements are automatically detected and made editable.</span>
+        <span data-lang="zh"><b>导入现有 ZPL：</b> 点击<b>↓ 导入 ZPL</b>，粘贴 ZPL 代码后点击<b>解析并导入</b>，所有元素将被自动识别为可编辑状态。</span>
+      </div>
+    </div>
+
+    <!-- ── Templates ── -->
+    <div class="hpanel" id="hpanel-library">
+      <div class="hsh">💾 <span data-lang="en">Saving a Template</span><span data-lang="zh">保存模板</span></div>
+      <div class="hstep"><div class="hstep-num">1</div><div class="hstep-body">
+        <span data-lang="en">Build your label in the <b>✏️ Designer</b> screen and finish all elements.</span>
+        <span data-lang="zh">在<b>✏️ 设计器</b>界面完成标签的所有元素设计。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">2</div><div class="hstep-body">
+        <span data-lang="en">At the top of the Designer, enter a descriptive <b>Template Name</b> (e.g. <i>Shipping Label – 4×2 in</i>).</span>
+        <span data-lang="zh">在设计器顶部输入描述性的<b>模板名称</b>（例如：<i>发货标签 – 4×2 英寸</i>）。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">3</div><div class="hstep-body">
+        <span data-lang="en">(Optional) Enter a <b>Linked SKU</b> so the Scan &amp; Print screen can automatically select this template when that SKU is detected.</span>
+        <span data-lang="zh">（可选）填写<b>关联 SKU</b>，使扫描打印界面在识别到该 SKU 时自动选用此模板。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">4</div><div class="hstep-body">
+        <span data-lang="en">Click <b>💾 Save Template</b>. A green toast message confirms the save. The template appears on the <b>📂 Templates</b> screen immediately.</span>
+        <span data-lang="zh">点击<b>💾 保存模板</b>，绿色提示确认保存成功，模板随即出现在<b>📂 模板库</b>界面。</span>
+      </div></div>
+
+      <div class="hsh">📂 <span data-lang="en">Loading / Editing a Template</span><span data-lang="zh">加载 / 编辑模板</span></div>
+      <div class="hstep"><div class="hstep-num">1</div><div class="hstep-body">
+        <span data-lang="en">Go to <b>📂 Templates</b> from the nav bar. All saved templates are shown as cards with a miniature label preview.</span>
+        <span data-lang="zh">从导航栏前往<b>📂 模板库</b>，所有已保存的模板以卡片形式展示，并附有缩略预览。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">2</div><div class="hstep-body">
+        <span data-lang="en">Use the <b>🔍 Search</b> box to filter templates by name. Results update as you type.</span>
+        <span data-lang="zh">使用<b>🔍 搜索</b>框按名称筛选模板，结果实时更新。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">3</div><div class="hstep-body">
+        <span data-lang="en">Click <b>✏️ Edit</b> on a template card to open it in the Designer with all elements fully loaded.</span>
+        <span data-lang="zh">点击模板卡片上的<b>✏️ 编辑</b>按钮，在设计器中打开并完整载入所有元素。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">4</div><div class="hstep-body">
+        <span data-lang="en">Make your changes and click <b>💾 Save Template</b> again to overwrite. Or change the name first to save as a new copy.</span>
+        <span data-lang="zh">进行修改后再次点击<b>💾 保存模板</b>覆盖原版，或先修改名称以保存为新副本。</span>
+      </div></div>
+
+      <div class="hsh">⧉ <span data-lang="en">Duplicating a Template</span><span data-lang="zh">复制模板</span></div>
+      <div class="hstep"><div class="hstep-num">1</div><div class="hstep-body">
+        <span data-lang="en">On the template card, click <b>⧉ Duplicate</b>. A copy named <i>Template (Copy)</i> is created instantly.</span>
+        <span data-lang="zh">点击模板卡片上的<b>⧉ 复制</b>，将立即创建一个名为<i>模板 (副本)</i> 的复件。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">2</div><div class="hstep-body">
+        <span data-lang="en">Open the copy with <b>✏️ Edit</b> and rename it, then save — a fast way to create variants of the same label.</span>
+        <span data-lang="zh">用<b>✏️ 编辑</b>打开副本，重命名后保存 — 这是快速创建同一标签变体的便捷方法。</span>
+      </div></div>
+
+      <div class="hsh">🗑 <span data-lang="en">Deleting a Template</span><span data-lang="zh">删除模板</span></div>
+      <div class="hstep"><div class="hstep-num">1</div><div class="hstep-body">
+        <span data-lang="en">Click <b>🗑 Delete</b> on the template card and confirm when prompted.</span>
+        <span data-lang="zh">点击模板卡片上的<b>🗑 删除</b>，在弹窗中确认操作。</span>
+      </div></div>
+      <div class="hwarn">⚠️ <b><span data-lang="en">Deletion cannot be undone.</span><span data-lang="zh">删除不可撤销。</span></b>
+        <span data-lang="en"> Deleted templates are permanently removed and cannot be recovered. Duplicate a template before deleting if you are unsure.</span>
+        <span data-lang="zh"> 已删除的模板将永久移除，无法恢复。如有疑虑，请在删除前先复制一份。</span>
+      </div>
+      <div class="htip">💡 <b><span data-lang="en">Tip:</span><span data-lang="zh">提示：</span></b>
+        <span data-lang="en"> You can link a template to a product SKU. When an order for that SKU is scanned on the Scan &amp; Print screen, the correct template is selected automatically.</span>
+        <span data-lang="zh"> 可将模板与产品 SKU 关联。在扫描打印界面扫描该 SKU 的订单时，系统将自动选择对应模板。</span>
+      </div>
+    </div>
+
+    <!-- ── Print ── -->
+    <div class="hpanel" id="hpanel-print">
+      <div class="hsh">🖨️ <span data-lang="en">How to Print a Label (Step-by-Step)</span><span data-lang="zh">如何打印标签（分步说明）</span></div>
+      <div class="hstep"><div class="hstep-num">1</div><div class="hstep-body">
+        <span data-lang="en">Click <b>🖨️ Print</b> in the navigation bar to open the Print screen.</span>
+        <span data-lang="zh">点击导航栏中的<b>🖨️ 打印</b>，打开打印界面。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">2</div><div class="hstep-body">
+        <span data-lang="en">Use the <b>Select Template</b> dropdown to choose the label design you want to print.</span>
+        <span data-lang="zh">使用<b>选择模板</b>下拉菜单，选择要打印的标签设计。</span>
+        <div class="hstep-detail"><span data-lang="en">If the list is empty, go to <b>✏️ Designer</b> first to build and save a template.</span><span data-lang="zh">如果列表为空，请先前往<b>✏️ 设计器</b>创建并保存模板。</span></div>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">3</div><div class="hstep-body">
+        <span data-lang="en">If the template has <b>variable fields</b>, an input box appears for each one. Type the value for this print job — for example the order number, batch code, or product name.</span>
+        <span data-lang="zh">如果模板包含<b>变量字段</b>，每个变量都会显示一个输入框，填写本次打印的内容，例如订单号、批次码或产品名称。</span>
+        <div class="hstep-detail"><span data-lang="en">Variable fields were created in the Designer by enabling <b>Mark as Variable</b> on an element. They appear as <b>{VariableName}</b> in the label preview.</span><span data-lang="zh">变量字段是在设计器中为元素启用<b>标记为变量</b>后创建的，在标签预览中显示为 <b>{变量名称}</b>。</span></div>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">4</div><div class="hstep-body">
+        <span data-lang="en">Click <b>⚡ Generate ZPL</b>. The ZPL code is built and shown in the output area. The label preview updates to show the filled-in values.</span>
+        <span data-lang="zh">点击<b>⚡ 生成 ZPL</b>，ZPL 代码生成并显示在输出区域，标签预览同时更新为填写后的内容。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">5</div><div class="hstep-body">
+        <span data-lang="en">Check the <b>Printer URL</b> field. It should show the Zebra printer's network address. If it is empty, type it in — e.g. <code class="hcode">http://192.168.1.100:9100</code></span>
+        <span data-lang="zh">检查<b>打印机地址</b>字段，应显示斑马打印机的网络地址。若为空，请填入地址，例如：<code class="hcode">http://192.168.1.100:9100</code></span>
+        <div class="hstep-detail"><span data-lang="en">The address is saved automatically in your browser after the first entry — it will be remembered for future sessions.</span><span data-lang="zh">首次填写后，地址将自动保存在浏览器中，后续会话无需重复输入。</span></div>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">6</div><div class="hstep-body">
+        <span data-lang="en">Click <b>🖨 Send Raw ZPL to Printer</b>. The app transmits the ZPL directly to the printer. A green success message confirms the label was printed.</span>
+        <span data-lang="zh">点击<b>🖨 发送原始 ZPL 到打印机</b>，应用将 ZPL 直接发送至打印机，绿色成功提示确认标签已打印。</span>
+      </div></div>
+
+      <div class="hsh">📥 <span data-lang="en">Saving / Copying the ZPL File</span><span data-lang="zh">保存 / 复制 ZPL 文件</span></div>
+      <div class="hstep"><div class="hstep-num">📋</div><div class="hstep-body">
+        <span data-lang="en">Click <b>📋 Copy ZPL</b> to copy the ZPL code to your clipboard — paste it into any ZPL tool or terminal.</span>
+        <span data-lang="zh">点击<b>📋 复制 ZPL</b> 将代码复制到剪贴板，可粘贴到任意 ZPL 工具或终端。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">💾</div><div class="hstep-body">
+        <span data-lang="en">Click <b>💾 Download ZPL</b> to save the code as a <code class="hcode">.zpl</code> text file — useful for batch printing via USB or network share.</span>
+        <span data-lang="zh">点击<b>💾 下载 ZPL</b> 将代码保存为 <code class="hcode">.zpl</code> 文本文件，适合通过 USB 或网络共享进行批量打印。</span>
+      </div></div>
+
+      <div class="hsh">🔢 <span data-lang="en">Quantity Printing</span><span data-lang="zh">数量打印</span></div>
+      <div class="hstep"><div class="hstep-num">Q</div><div class="hstep-body">
+        <span data-lang="en">Use the <b>Quantity</b> field to print multiple copies of the same label in a single send. The ZPL <code class="hcode">^PQ</code> command is added automatically.</span>
+        <span data-lang="zh">使用<b>数量</b>字段，单次发送可打印同一标签的多个副本，系统会自动添加 ZPL 的 <code class="hcode">^PQ</code> 命令。</span>
+      </div></div>
+
+      <div class="hinfo">🌐 <b><span data-lang="en">Network requirement:</span><span data-lang="zh">网络要求：</span></b>
+        <span data-lang="en"> The Zebra printer must be connected to the same network as your computer. The standard raw ZPL port is <b>9100</b>. Contact your IT team if you are unsure of the printer's IP address.</span>
+        <span data-lang="zh"> 斑马打印机须与您的电脑处于同一网络。原始 ZPL 标准端口为 <b>9100</b>。如不确定打印机 IP 地址，请联系 IT 团队。</span>
+      </div>
+      <div class="hwarn">⚠️ <b><span data-lang="en">If the printer does not respond:</span><span data-lang="zh">如果打印机无响应：</span></b>
+        <span data-lang="en"> Check that (1) the printer is powered on, (2) the network cable or Wi-Fi is connected, (3) the IP address in Printer URL is correct, and (4) port 9100 is not blocked by a firewall.</span>
+        <span data-lang="zh"> 请检查：(1) 打印机是否开机；(2) 网线或 Wi-Fi 是否连接；(3) 打印机地址中的 IP 是否正确；(4) 防火墙是否拦截了 9100 端口。</span>
+      </div>
+    </div>
+
+    <!-- ── Scan ── -->
+    <div class="hpanel" id="hpanel-scan">
+      <div class="hsh">📷 <span data-lang="en">How to Scan &amp; Print (Step-by-Step)</span><span data-lang="zh">如何扫描并打印（分步说明）</span></div>
+      <div class="hstep"><div class="hstep-num">1</div><div class="hstep-body">
+        <span data-lang="en">Click <b>📷 Scan &amp; Print</b> in the navigation bar.</span>
+        <span data-lang="zh">点击导航栏中的<b>📷 扫描打印</b>。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">2</div><div class="hstep-body">
+        <span data-lang="en"><b>Scan the order barcode</b> using one of three methods:</span>
+        <span data-lang="zh"><b>扫描订单条码</b>，可选以下三种方式之一：</span>
+        <div class="hstep-detail">
+          <span data-lang="en">
+            <b>📡 USB Barcode Scanner (recommended):</b> Click the <b>Order # / Barcode</b> input box to give it focus, then pull the trigger on your USB scanner gun. The barcode value is typed in automatically and the lookup runs immediately.<br><br>
+            <b>📷 Camera:</b> Click <b>▶ Start Camera</b> and point the camera at the barcode — detection happens automatically when a valid barcode is in frame. Works on Chrome, Edge, and Android Chrome.<br><br>
+            <b>⌨️ Manual:</b> Click the input box, type the order number, and press <kbd class="hcode">Enter</kbd>.
+          </span>
+          <span data-lang="zh">
+            <b>📡 USB 扫描枪（推荐）：</b> 点击<b>订单号 / 条码</b>输入框使其获得焦点，然后扣下扫描枪扳机，条码值将自动填入并立即查询。<br><br>
+            <b>📷 摄像头：</b> 点击<b>▶ 开始摄像</b>，将摄像头对准条码，检测到有效条码后自动识别。支持 Chrome、Edge 和 Android Chrome。<br><br>
+            <b>⌨️ 手动输入：</b> 点击输入框，输入订单号，按 <kbd class="hcode">Enter</kbd>。
+          </span>
+        </div>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">3</div><div class="hstep-body">
+        <span data-lang="en">The app looks up the order and displays the order details in the <b>Order Info</b> panel — SKU, product name, quantity, and customer.</span>
+        <span data-lang="zh">应用查询订单，并在<b>订单信息</b>面板中显示详细内容，包括 SKU、产品名称、数量和客户信息。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">4</div><div class="hstep-body">
+        <span data-lang="en">The <b>Label Template</b> is selected automatically if the SKU matches a linked template. Otherwise, choose the correct template from the dropdown.</span>
+        <span data-lang="zh">如果 SKU 与已关联的模板匹配，<b>标签模板</b>将自动选中；否则请从下拉菜单手动选择正确的模板。</span>
+        <div class="hstep-detail"><span data-lang="en">To link a template to a SKU: open the template in the Designer, type the SKU in the <b>Linked SKU</b> field, and save.</span><span data-lang="zh">关联模板与 SKU 的方法：在设计器中打开该模板，在<b>关联 SKU</b> 字段输入 SKU，保存即可。</span></div>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">5</div><div class="hstep-body">
+        <span data-lang="en">Check the <b>Variable Mapping</b> panel — the app has auto-filled each variable field from the order data. Adjust any value if needed.</span>
+        <span data-lang="zh">检查<b>变量映射</b>面板，应用已从订单数据中自动填写各变量字段，如需调整可手动修改。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">6</div><div class="hstep-body">
+        <span data-lang="en">Click <b>Proceed to Print →</b>. The app opens the <b>🖨️ Print</b> screen with all variable values pre-loaded.</span>
+        <span data-lang="zh">点击<b>前往打印 →</b>，应用跳转至<b>🖨️ 打印</b>界面，所有变量值已预先填写完毕。</span>
+      </div></div>
+      <div class="hstep"><div class="hstep-num">7</div><div class="hstep-body">
+        <span data-lang="en">Click <b>⚡ Generate ZPL</b> then <b>🖨 Send Raw ZPL to Printer</b>. The label prints immediately.</span>
+        <span data-lang="zh">点击<b>⚡ 生成 ZPL</b>，再点击<b>🖨 发送原始 ZPL 到打印机</b>，标签立即打印。</span>
+      </div></div>
+
+      <div class="hsh">📱 <span data-lang="en">Scanning Method Comparison</span><span data-lang="zh">扫描方式对比</span></div>
+      <table class="htable">
+        <thead><tr>
+          <th><span data-lang="en">Method</span><span data-lang="zh">方式</span></th>
+          <th><span data-lang="en">Best for</span><span data-lang="zh">适用场景</span></th>
+          <th><span data-lang="en">Works on</span><span data-lang="zh">支持平台</span></th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td>📡 <b><span data-lang="en">USB Scanner</span><span data-lang="zh">USB 扫描枪</span></b></td>
+            <td><span data-lang="en">High-volume, fastest input, any label format</span><span data-lang="zh">高频作业，速度最快，支持任何条码格式</span></td>
+            <td><span class="htag htag-g"><span data-lang="en">All browsers &amp; platforms</span><span data-lang="zh">全平台 / 所有浏览器</span></span></td>
+          </tr>
+          <tr>
+            <td>📷 <b><span data-lang="en">Camera</span><span data-lang="zh">摄像头</span></b></td>
+            <td><span data-lang="en">No scanner hardware, mobile devices</span><span data-lang="zh">无扫描枪设备，移动端使用</span></td>
+            <td><span class="htag htag-b"><span data-lang="en">Chrome, Edge, Android</span><span data-lang="zh">Chrome、Edge、安卓</span></span></td>
+          </tr>
+          <tr>
+            <td>⌨️ <b><span data-lang="en">Manual entry</span><span data-lang="zh">手动输入</span></b></td>
+            <td><span data-lang="en">Corrections, unlabelled items, testing</span><span data-lang="zh">纠错、无标签物品、测试</span></td>
+            <td><span class="htag htag-a"><span data-lang="en">All browsers &amp; platforms</span><span data-lang="zh">全平台 / 所有浏览器</span></span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="htip">💡 <b><span data-lang="en">Fastest daily workflow:</span><span data-lang="zh">最快日常操作流程：</span></b>
+        <span data-lang="en"> Keep the Scan &amp; Print screen open all day. Each scan takes under 5 seconds from trigger to printed label — scan → auto-fill → Generate → Send.</span>
+        <span data-lang="zh"> 全天保持扫描打印界面开启，每次扫描从扣动扳机到标签打印完成不超过5秒——扫描 → 自动填充 → 生成 → 发送。</span>
+      </div>
+      <div class="hinfo">📱 <b><span data-lang="en">iPhone / iPad users:</span><span data-lang="zh">iPhone / iPad 用户：</span></b>
+        <span data-lang="en"> Camera barcode detection requires Safari on iOS. Alternatively, use a USB or Bluetooth barcode scanner — these work on all platforms without any browser restriction.</span>
+        <span data-lang="zh"> iOS 上摄像头条码识别需在 Safari 中使用。建议改用 USB 或蓝牙扫描枪，无平台和浏览器限制。</span>
+      </div>
+    </div>
+
+  </div><!-- /hcontent -->
+</div><!-- /screen-help -->
+
+</div><!-- #app -->
+
 <div class="toast" id="toast"></div>
 
 <!-- ═══════════════════════════════════════════
@@ -936,7 +1373,7 @@ let lang = 'EN';
 const I18N = {
   EN: {
     'nav.home':'🏠 Home','nav.designer':'✏️ Designer',
-    'nav.library':'📂 Templates','nav.print':'🖨️ Print','nav.scan':'📷 Scan & Print',
+    'nav.library':'📂 Templates','nav.print':'🖨️ Print','nav.scan':'📷 Scan & Print','nav.help':'❓ Help',
     'lang.toggle':'ZH 中文',
     'home.title':'ZPL Label Template Designer',
     'home.desc':'Design label templates visually, add text, barcodes &amp; shapes, define variables, then generate print-ready ZPL code instantly.',
@@ -949,6 +1386,7 @@ const I18N = {
     'dsgn.sku':'Linked SKU:','dsgn.sku.ph':'e.g. DUR-AA-4PK',
     'dsgn.import':'↓ Import ZPL','dsgn.preview':'👁 ZPL Preview','dsgn.save':'💾 Save Template',
     'lbl.size':'Label Size (dots)','lbl.width':'Width','lbl.height':'Height',
+    'lbl.preset':'Preset Size','lbl.custom':'— Custom —',
     'lbl.dpi':'203 DPI → 8 dots/mm<br>600×400 ≈ 75×50 mm',
     'add.elem':'Add Element','add.text':'Text','add.c128':'Code 128',
     'add.qr':'QR Code','add.ean':'EAN-13','add.upc':'UPC-A','add.box':'Box / Line',
@@ -965,6 +1403,7 @@ const I18N = {
     'ori.N':'N \u2014 Normal','ori.R':'R \u2014 90\u00b0 Rotated',
     'ori.I':'I \u2014 180\u00b0 Inverted','ori.B':'B \u2014 270\u00b0 Bottom-up',
     'p.thick':'Border Thickness (dots)','p.mag':'QR Magnification (1\u201310)',
+    'p.showval':'\ud83d\udccb Show Value Below Barcode (HRI)',
     'p.content':'Default Content / Value','p.content.ph':'Enter default value\u2026',
     'p.isvar':'\ud83d\udd00 Mark as Variable (fill at print time)',
     'p.varname':'Variable Name','p.varname.ph':'e.g. ProductName',
@@ -1030,7 +1469,7 @@ const I18N = {
   },
   ZH: {
     'nav.home':'\ud83c\udfe0 \u9996\u9875','nav.designer':'\u270f\ufe0f \u8bbe\u8ba1\u5668',
-    'nav.library':'\ud83d\udcc2 \u6a21\u677f\u5e93','nav.print':'\ud83d\udda8\ufe0f \u6253\u5370',
+    'nav.library':'\ud83d\udcc2 \u6a21\u677f\u5e93','nav.print':'\ud83d\udda8\ufe0f \u6253\u5370','nav.scan':'\ud83d\udcf7 \u626b\u63cf\u6253\u5370','nav.help':'\u2753 \u5e2e\u52a9',
     'lang.toggle':'EN English',
     'home.title':'ZPL \u6807\u7b7e\u6a21\u677f\u8bbe\u8ba1\u5668',
     'home.desc':'\u53ef\u89c6\u5316\u8bbe\u8ba1\u6807\u7b7e\u6a21\u677f\uff0c\u6dfb\u52a0\u6587\u5b57\u3001\u6761\u7801\u548c\u5f62\u72b6\uff0c\u5b9a\u4e49\u53d8\u91cf\uff0c\u4e00\u952e\u751f\u6210\u6253\u5370\u5c31\u7eea\u7684 ZPL \u4ee3\u7801\u3002',
@@ -1041,6 +1480,7 @@ const I18N = {
     'dsgn.back':'\u2190 \u8fd4\u56de','tpl.placeholder':'\u6a21\u677f\u540d\u79f0\u2026',
     'dsgn.import':'\u2193 \u5bfc\u5165 ZPL','dsgn.preview':'\ud83d\udc41 ZPL \u9884\u89c8','dsgn.save':'\ud83d\udcbe \u4fdd\u5b58\u6a21\u677f',
     'lbl.size':'\u6807\u7b7e\u5c3a\u5bf8\uff08\u70b9\uff09','lbl.width':'\u5bbd\u5ea6','lbl.height':'\u9ad8\u5ea6',
+    'lbl.preset':'\u9884\u8bbe\u5c3a\u5bf8','lbl.custom':'\u2014 \u81ea\u5b9a\u4e49 \u2014',
     'lbl.dpi':'203 DPI \u2192 8 \u70b9/\u6beb\u7c73<br>600\u00d7400 \u2248 75\u00d750 \u6beb\u7c73',
     'add.elem':'\u6dfb\u52a0\u5143\u7d20','add.text':'\u6587\u5b57','add.c128':'Code 128',
     'add.qr':'\u4e8c\u7ef4\u7801','add.ean':'EAN-13','add.upc':'UPC-A','add.box':'\u65b9\u6846 / \u7ebf\u6761',
@@ -1057,6 +1497,7 @@ const I18N = {
     'ori.N':'N \u2014 \u6b63\u5e38','ori.R':'R \u2014 \u987a\u65f6\u9488 90\u00b0',
     'ori.I':'I \u2014 180\u00b0 \u7ffb\u8f6c','ori.B':'B \u2014 270\u00b0 \u5e95\u90e8\u671d\u4e0a',
     'p.thick':'\u8fb9\u6846\u539a\u5ea6\uff08\u70b9\uff09','p.mag':'QR \u653e\u5927\u500d\u6570 (1\u201310)',
+    'p.showval':'\ud83d\udccb \u5728\u6761\u7801\u4e0b\u663e\u793a\u6570\u503c (HRI)',
     'p.content':'\u9ed8\u8ba4\u5185\u5bb9 / \u503c','p.content.ph':'\u8f93\u5165\u9ed8\u8ba4\u503c\u2026',
     'p.isvar':'\ud83d\udd00 \u6807\u8bb0\u4e3a\u53d8\u91cf\uff08\u6253\u5370\u65f6\u586b\u5199\uff09',
     'p.varname':'\u53d8\u91cf\u540d\u79f0','p.varname.ph':'\u4f8b\u5982\uff1aProductName',
@@ -1134,6 +1575,8 @@ function toggleLang() {
 }
 
 function applyLang() {
+  // Sync bilingual CSS class (used by help screen data-lang spans)
+  document.body.classList.toggle('zh-mode', lang === 'ZH');
   // Update text / innerHTML for all tagged elements
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
@@ -1296,6 +1739,16 @@ function nav(screen) {
   if (screen==='print')   populateSel();
   if (screen==='designer') rCanvas();
   if (screen==='home')    updateStats();
+  if (screen==='help')    setHelpTab('overview');
+}
+
+function setHelpTab(tab) {
+  document.querySelectorAll('.hpanel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.htab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('hpanel-' + tab);
+  const tabEl  = document.getElementById('htab-'  + tab);
+  if (panel) panel.classList.add('active');
+  if (tabEl) tabEl.classList.add('active');
 }
 
 // ─── STORAGE ──────────────────────────────────────────────────
@@ -1379,10 +1832,10 @@ function defElem(type) {
                  content:'', isVariable:false, variableName:'' };
   const m = {
     TEXT:    {...base, content:'Sample Text', fontH:30, fontW:30, width:200, height:30},
-    CODE128: {...base, content:'123456789',  width:200, height:80},
+    CODE128: {...base, content:'123456789',  width:200, height:80, showValue:true},
     QRCODE:  {...base, content:'https://example.com', magnification:4, width:80, height:80},
-    EAN13:   {...base, content:'1234567890128', width:180, height:80},
-    UPCA:    {...base, content:'123456789012',  width:180, height:80},
+    EAN13:   {...base, content:'1234567890128', width:180, height:80, showValue:true},
+    UPCA:    {...base, content:'123456789012',  width:180, height:80, showValue:true},
     BOX:     {...base, content:'', width:200, height:100, thickness:3},
   };
   return m[type]||base;
@@ -1476,8 +1929,10 @@ function elemHTML(e, sc) {
       const wRatio = (e.fontW > 0 && e.fontH > 0) ? (e.fontW / e.fontH).toFixed(3) : 1;
       return `<div class="txt-prev" style="font-size:${Math.max(8,e.fontH*sc*0.72)}px;transform:scaleX(${wRatio});transform-origin:left top;">${esc(lbl)||'&nbsp;'}</div>`;
     }
-    case 'CODE128': case 'EAN13': case 'UPCA':
-      return `<div class="bc-prev"><div class="bc-bars"></div><div class="bc-label">${esc(lbl)}</div></div>`;
+    case 'CODE128': case 'EAN13': case 'UPCA': {
+      const showLbl = e.showValue !== false;
+      return `<div class="bc-prev"><div class="bc-bars" style="height:${showLbl?'78%':'100%'};"></div>${showLbl?`<div class="bc-label">${esc(lbl)}</div>`:''}</div>`;
+    }
     case 'QRCODE': {
       const qrData = e.isVariable ? `{${e.variableName||'?'}}` : (e.content||'https://example.com');
       const qrPx = Math.round(Math.max(e.width, e.height) * sc);
@@ -1599,15 +2054,18 @@ function showProps(e) {
   $('p-ori').value=e.orientation||'N';
 
   const isTxt=e.type==='TEXT', isBox=e.type==='BOX', isQR=e.type==='QRCODE';
+  const is1D =['CODE128','EAN13','UPCA'].includes(e.type);
   $('pr-font').style.display   = isTxt?'':'none';
   $('pr-thick').style.display  = isBox?'':'none';
   $('pr-mag').style.display    = isQR?'':'none';
+  $('pr-showval').style.display= is1D?'':'none';
   $('pr-orient').style.display = isBox?'none':'';
   $('pr-content').style.display= isBox?'none':'';
 
   if(isTxt){ $('p-fh').value=e.fontH||30; $('p-fw').value=e.fontW||30; }
   if(isBox){ $('p-thick').value=e.thickness||3; }
   if(isQR) { $('p-mag').value=e.magnification||4; }
+  if(is1D) { $('p-showval').checked = e.showValue!==false; }
   $('pl-w').textContent = isBox?T('p.w.box'):T('p.w');
   $('pl-h').textContent = isBox?T('p.h.box'):(e.type==='TEXT'?T('p.h'):T('p.h.bar'));
 
@@ -1658,6 +2116,7 @@ function changeType(newType) {
   e.magnification= d.magnification?? e.magnification;
   e.width        = d.width        ?? e.width;
   e.height       = d.height       ?? e.height;
+  if (['CODE128','EAN13','UPCA'].includes(newType)) e.showValue = d.showValue ?? true;
   // Keep position, content and variable settings unchanged
   rCanvas(); rTable(); showProps(e);
 }
@@ -1714,7 +2173,7 @@ function buildZPL(elements, labelW, labelH, varValues) {
         // ^BY  = bar code field defaults: width, ratio, height
         // ^BC  = Code 128: orientation, height, print-line, line-above, check-digit, mode
         z += `^BY2,3,${e.height||80}\n`;
-        z += `^BC${ori},${e.height||80},Y,N,N\n`;
+        z += `^BC${ori},${e.height||80},${e.showValue!==false?'Y':'N'},N,N\n`;
         z += `^FD${val}^FS\n`;
         break;
 
@@ -1726,13 +2185,13 @@ function buildZPL(elements, labelW, labelH, varValues) {
 
       case 'EAN13':
         // ^BE  = EAN-13: orientation, height, print-line, line-above
-        z += `^BE${ori},${e.height||80},Y,N\n`;
+        z += `^BE${ori},${e.height||80},${e.showValue!==false?'Y':'N'},N\n`;
         z += `^FD${val}^FS\n`;
         break;
 
       case 'UPCA':
         // ^BU  = UPC-A: orientation, height, print-line, line-above, print-check-digit
-        z += `^BU${ori},${e.height||80},Y,N,Y\n`;
+        z += `^BU${ori},${e.height||80},${e.showValue!==false?'Y':'N'},N,Y\n`;
         z += `^FD${val}^FS\n`;
         break;
 
@@ -1805,7 +2264,7 @@ function parseZPL(zplText) {
 
     // ── Type-specific parameters ────────────────────────────
     let fontH = 30, fontW = 30, height = 60, width = 200;
-    let orientation = 'N', thickness = 3, magnification = 4;
+    let orientation = 'N', thickness = 3, magnification = 4, showValue = true;
 
     switch (type) {
       case 'TEXT': {
@@ -1826,12 +2285,16 @@ function parseZPL(zplText) {
       case 'CODE128':
       case 'EAN13':
       case 'UPCA': {
-        // ^BC / ^BE / ^BU  orientation,height,...
-        const pat = type === 'CODE128' ? /\^BC([A-Z]),(\d+)/i
-                  : type === 'EAN13'   ? /\^BE([A-Z]),(\d+)/i
-                                       : /\^BU([A-Z]),(\d+)/i;
+        // ^BC / ^BE / ^BU  orientation,height,printLine,...
+        const pat = type === 'CODE128' ? /\^BC([A-Z]),(\d+),([YN])/i
+                  : type === 'EAN13'   ? /\^BE([A-Z]),(\d+),([YN])/i
+                                       : /\^BU([A-Z]),(\d+),([YN])/i;
         const m = seg.match(pat);
-        if (m) { orientation = m[1].toUpperCase(); height = parseInt(m[2]); }
+        if (m) {
+          orientation = m[1].toUpperCase();
+          height      = parseInt(m[2]);
+          showValue   = m[3].toUpperCase() === 'Y';
+        }
         width = 200;
         break;
       }
@@ -1860,7 +2323,7 @@ function parseZPL(zplText) {
       type, x, y, width, height,
       orientation, content,
       isVariable: false, variableName: '',
-      fontH, fontW, thickness, magnification
+      fontH, fontW, thickness, magnification, showValue
     });
   }
 
