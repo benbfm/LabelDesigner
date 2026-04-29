@@ -326,6 +326,135 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--primary);}
 #import-zpl-input:focus{box-shadow:0 0 0 2px var(--primary);}
 #iml-footer{padding:10px 18px 14px;display:flex;align-items:center;gap:10px;justify-content:flex-end;}
 #iml-parse-result{flex:1;font-size:12px;color:var(--text2);}
+
+/* ════════════════ MOBILE RESPONSIVE ════════════════
+   Breakpoints:
+     ≤ 768px  — tablet / large phone (landscape)
+     ≤ 480px  — small phone (portrait)
+   Root problems on mobile:
+     • html,body { overflow:hidden } traps the viewport → user can't scroll
+     • Fixed sidebar widths (220px + 262px) exceed narrow screens
+     • 100vh / flex:1 layout collapses content instead of allowing scroll
+   ════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Unlock the viewport ── */
+  html, body { height: auto; overflow-y: auto; overflow-x: hidden; }
+  #app { height: auto; min-height: 100dvh; width: 100%; overflow: visible; }
+
+  /* ── Screens become block-level scrollable pages ── */
+  .screen { overflow: visible; flex: none; }
+  .screen.active { display: flex; flex-direction: column; min-height: calc(100dvh - var(--nav)); }
+
+  /* ── Nav: horizontal scroll so all tabs remain reachable ── */
+  #nav { gap: 4px; padding: 0 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0; }
+  #nav::-webkit-scrollbar { display: none; }
+  .brand { font-size: 13px; gap: 6px; flex-shrink: 0; }
+  .brand svg { width: 18px; height: 18px; }
+  .nav-btn { padding: 6px 10px; font-size: 12px; flex-shrink: 0; white-space: nowrap; min-height: 44px; }
+  .nav-spacer { min-width: 8px; flex: 0; }
+  .nav-version { display: none; }
+
+  /* ── Home ── */
+  #screen-home { padding: 24px 16px; gap: 24px; overflow-y: auto; justify-content: flex-start; }
+  .home-hero h1 { font-size: 20px; }
+  .home-cards { flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .hcard { width: calc(50% - 8px); min-width: 140px; padding: 20px 14px 16px; }
+  .hcard-icon { width: 44px; height: 44px; font-size: 20px; }
+  .home-stats { gap: 16px; padding: 12px 16px; flex-wrap: wrap; justify-content: center; }
+
+  /* ── Designer: stack sidebar → canvas → list → props ── */
+  #screen-designer { height: auto; min-height: calc(100dvh - var(--nav)); }
+  #dsgn-toolbar { height: auto; flex-wrap: wrap; gap: 6px; padding: 8px 10px; }
+  #tpl-name { max-width: 100%; width: 100%; flex: none; }
+  .sku-lbl { display: none; }
+  #tpl-linked-sku { width: 120px; }
+
+  #dsgn-body { flex-direction: column; overflow: visible; height: auto; }
+
+  /* Left sidebar → horizontal strip of add buttons */
+  #dsgn-left {
+    width: 100%; height: auto; border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row; flex-wrap: wrap;
+    padding: 8px 10px; gap: 6px; overflow-y: visible;
+  }
+  .sb-sec { flex-direction: row; flex-wrap: wrap; gap: 6px; padding: 0; }
+  .sb-sep { display: none; }
+  #lbl-hint { display: none; }
+  .add-btn { width: auto; padding: 6px 10px; font-size: 12px; }
+  /* Hide label size inputs on very small screens — use defaults */
+  #lbl-size-sec { width: 100%; }
+
+  /* Canvas area: allow panning via scroll */
+  #dsgn-center { height: auto; }
+  #canvas-area {
+    flex: none; min-height: 280px; height: auto;
+    overflow: auto; -webkit-overflow-scrolling: touch;
+    align-items: flex-start; justify-content: flex-start;
+    padding: 12px;
+  }
+
+  /* Element list: fixed height, scrollable */
+  #elem-list-area { flex: none; height: 200px; min-height: 0; overflow: hidden; }
+  #elem-tbl-wrap { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  /* Shrink table columns on mobile */
+  #etbl th:nth-child(3),#etbl td:nth-child(3),
+  #etbl th:nth-child(4),#etbl td:nth-child(4) { display: none; }
+
+  /* Props panel: full width below list */
+  #dsgn-right {
+    width: 100%; border-left: none; border-top: 1px solid var(--border);
+    overflow: visible; height: auto;
+  }
+  #props-body { overflow: visible; }
+  #pform { padding-bottom: 20px; }
+  /* Make touch targets bigger */
+  .align-btn { width: 38px; height: 36px; font-size: 17px; }
+  .zoom-btn { width: 36px !important; height: 36px !important; }
+  .seq-btn { height: 28px; padding: 0 8px; font-size: 12px; }
+
+  /* ── Library ── */
+  #screen-library { padding: 14px 12px; gap: 12px; overflow-y: auto; }
+  .lib-hdr { flex-wrap: wrap; gap: 8px; }
+  #search-box { width: 100%; }
+  .lib-acts { width: 100%; }
+  #tpl-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; overflow: visible; flex: none; }
+
+  /* ── Print ── */
+  #screen-print { padding: 14px 12px; gap: 12px; overflow-y: auto; }
+  #print-body { flex-direction: column; overflow: visible; flex: none; }
+  #print-left { width: 100%; overflow: visible; }
+  #print-right { overflow: visible; }
+
+  /* ── Scan ── */
+  #screen-scan { padding: 14px 12px; gap: 12px; overflow-y: auto; }
+  #scan-body { flex-direction: column; overflow: visible; flex: none; }
+  #scan-left { width: 100%; overflow: visible; }
+  #scan-right { overflow: visible; }
+
+  /* ── Modals: full-width on mobile ── */
+  #zpl-modal { width: calc(100vw - 24px); max-height: 90dvh; }
+  #import-modal { width: calc(100vw - 24px); }
+  #import-zpl-input { height: 180px; }
+
+  /* ── Touch-friendly element interaction ── */
+  .lelem { cursor: default; }
+  .resize-handle { width: 14px; height: 14px; right: -6px; bottom: -6px; }
+
+  /* ── Keyboard-shortcut hint: hide on mobile ── */
+  #kbd-hint { display: none; }
+}
+
+/* ── Extra small phones (portrait < 480px) ── */
+@media (max-width: 480px) {
+  .hcard { width: 100%; max-width: 300px; }
+  .home-stats { flex-direction: column; align-items: center; gap: 10px; }
+  .order-grid { grid-template-columns: 1fr; }
+  .row2 { grid-template-columns: 1fr; }
+  #dsgn-toolbar { gap: 4px; }
+  .print-hdr, .scan-hdr { flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
