@@ -2667,8 +2667,10 @@ const Scan = {
   cameraRunning:  false,
   cameraDetector: null,  // BarcodeDetector instance (Path A)
   zxingReader:    null,  // ZXing reader instance (Path B)
+  decodeCanvas:   null,  // offscreen canvas for frame capture (both paths)
   scanTimer:      null,  // setInterval handle for decode loop
   _decoding:      false, // mutex — prevents concurrent decode calls
+  _tickCount:     0,     // frames attempted — shown in status so user can confirm loop is live
 };
 
 // ── Core lookup ────────────────────────────────────────────────
@@ -2825,11 +2827,11 @@ function clearScanOrderBanner() {
 //   BarcodeDetector captures the current frame from a playing video natively.
 //
 // Path B — ZXing 0.21.3 (iOS Safari < 17, Firefox, older browsers):
-//   decode(videoElement) — synchronous, returns Result or throws NotFoundException.
-//   ZXing draws the current video frame to its own internal canvas and runs the
-//   multi-format barcode decoder on the pixel data directly.
-//   NOTE: decode() accepts HTMLImageElement | HTMLVideoElement only — do NOT
-//   pass a canvas element; it will silently fail with a swallowed TypeError.
+//   decodeFromCanvas(canvas) — synchronous, returns Result or throws NotFoundException.
+//   We draw the video frame into our own canvas (using offsetWidth/offsetHeight as
+//   dimension fallback because iOS Safari reports videoWidth=0 on MediaStreams), then
+//   pass the canvas directly to ZXing.  We do NOT use decode(video) because ZXing's
+//   internal canvas creation uses videoWidth — producing a 0×0 canvas on iOS Safari.
 //
 // DECODE LOOP: setInterval every 250 ms (4 fps) — fast enough to catch a
 // barcode held still for ~1 s, slow enough not to overload mobile CPU.
@@ -2905,13 +2907,34 @@ async function startCamera() {
 
     // ── Step 6: initialise decoder ───────────────────────────────────────────
     if (hasBD) {
-      Scan.cameraDetector = new BarcodeDetector({
-        formats: ['qr_code','code_128','code_39','code_93','ean_13','ean_8',
-                  'upc_a','upc_e','data_matrix','pdf417','aztec','itf']
-      });
+      // On Android Chrome, BarcodeDetector.getSupportedFormats() tells us which
+      // formats this device/build actually supports.  Passing an unsupported format
+      // to the constructor causes it to throw or silently mis-behave on some builds.
+      const wantedFormats = ['qr_code','code_128','code_39','code_93','ean_13','ean_8',
+                             'upc_a','upc_e','data_matrix','pdf417','aztec','itf'];
+      let formats = wantedFormats;
+      try {
+        const supported = await BarcodeDetector.getSupportedFormats();
+        if (supported && supported.length > 0)
+          formats = wantedFormats.filter(f => supported.includes(f));
+        if (formats.length === 0) formats = wantedFormats;  // fallback: try all
+        console.log('[BarcodeDetector] supported formats on this device:', supported);
+        console.log('[BarcodeDetector] using formats:', formats);
+      } catch (_) {
+        // getSupportedFormats() not available on this build — proceed with all formats
+      }
+      try {
+        Scan.cameraDetector = new BarcodeDetector({ formats });
+      } catch (bdErr) {
+        // Constructor threw (e.g. unsupported format on this build) — fall back to ZXing
+        console.warn('[BarcodeDetector] constructor failed, falling back to ZXing:', bdErr);
+        Scan.cameraDetector = null;
+        if (hasZX) Scan.zxingReader = new ZXing.BrowserMultiFormatReader();
+      }
     } else {
       Scan.zxingReader = new ZXing.BrowserMultiFormatReader();
     }
+    Scan._tickCount = 0;
 
     Scan._decoding = false;
 
@@ -2946,8 +2969,9 @@ async function startCamera() {
 //   • BarcodeDetector.detect(video) is explicitly supported and works on all
 //     desktop browsers. It captures the current frame internally.
 //
-//   • ZXing.decode(video) internally draws the video to its own canvas and
-//     decodes the pixels — no manual canvas needed.
+//   • ZXing.decodeFromCanvas(canvas) is used instead of decode(video) because
+//     decode(video) uses video.videoWidth for canvas size — which is 0 on iOS
+//     Safari MediaStreams — producing a 0×0 blank canvas every tick.
 function scanFrameTick() {
   if (!Scan.cameraRunning || Scan._decoding) return;
 
@@ -2957,11 +2981,34 @@ function scanFrameTick() {
   if (!video || video.readyState < 2) return;
 
   Scan._decoding = true;
+  Scan._tickCount++;
+
+  // Show a live frame counter every ~1 s (every 4 ticks at 250 ms interval).
+  // This lets the user confirm the decode loop is actually running on their device.
+  if (Scan._tickCount % 4 === 0) {
+    $('scan-cam-status').textContent =
+      '🔍 Scanning… (' + Scan._tickCount + ' frames checked)';
+  }
+
+  // Capture current video frame into a shared canvas.
+  // Using offsetWidth/offsetHeight as fallback for videoWidth/videoHeight because:
+  //   • iOS Safari: videoWidth is 0 on live MediaStreams
+  //   • Some Android builds: videoWidth may be unreliable until first resize event
+  const w = video.videoWidth  || video.offsetWidth  || 640;
+  const h = video.videoHeight || video.offsetHeight || 480;
+  if (!Scan.decodeCanvas) Scan.decodeCanvas = document.createElement('canvas');
+  if (Scan.decodeCanvas.width !== w || Scan.decodeCanvas.height !== h) {
+    Scan.decodeCanvas.width  = w;
+    Scan.decodeCanvas.height = h;
+  }
+  Scan.decodeCanvas.getContext('2d').drawImage(video, 0, 0, w, h);
 
   if (Scan.cameraDetector) {
     // ── Path A: BarcodeDetector (Chrome / Edge / Android Chrome / Safari 17+) ──
-    // detect(videoElement) captures the current frame and returns detections.
-    Scan.cameraDetector.detect(video)
+    // Pass our canvas instead of the video element directly — avoids edge cases
+    // where detect(video) on some Android builds fails when videoWidth is 0
+    // or when the video compositor hasn't surfaced the current frame yet.
+    Scan.cameraDetector.detect(Scan.decodeCanvas)
       .then(codes => {
         try {
           if (codes.length > 0 && Scan.cameraRunning) {
@@ -2971,22 +3018,38 @@ function scanFrameTick() {
           Scan._decoding = false;  // always release mutex, even if onBarcodeFound throws
         }
       })
-      .catch(() => { Scan._decoding = false; });
+      .catch(err => {
+        Scan._decoding = false;
+        // Log unexpected errors — this is the most common reason Android fails silently
+        console.warn('[BarcodeDetector] detect() error:', err?.name, err?.message);
+      });
 
   } else if (Scan.zxingReader) {
     // ── Path B: ZXing (iOS Safari < 17, Firefox, older browsers) ────────────
-    // decode(videoElement) is synchronous. ZXing draws the current video frame
-    // to its own internal canvas and runs the barcode decoder on the pixels.
-    // This bypasses decodeFromVideoElement's isVideoPlaying() check, which
-    // requires video.currentTime > 0 — unreliable on iOS Safari MediaStreams.
+    //
+    // WHY decodeFromCanvas() not decode(video):
+    //   decode(video) uses video.videoWidth for canvas size — which is 0 on iOS
+    //   Safari MediaStreams — creating a 0×0 blank canvas that always throws
+    //   NotFoundException.  We already captured the frame above; just pass it in.
+    //
+    //   decodeFromCanvas is declared `protected` in TypeScript but compiles to a
+    //   regular prototype method in the UMD build — fully callable from JavaScript.
+    //   The guard below logs a one-time warning if an unexpected build omits it.
     try {
-      const result = Scan.zxingReader.decode(video);
+      let result;
+      if (typeof Scan.zxingReader.decodeFromCanvas === 'function') {
+        result = Scan.zxingReader.decodeFromCanvas(Scan.decodeCanvas);
+      } else {
+        // Unexpected: decodeFromCanvas missing in this ZXing build.
+        // Fall back to decode(video) — works on desktop where videoWidth > 0.
+        console.warn('[ZXing] decodeFromCanvas not available; falling back to decode(video)');
+        result = Scan.zxingReader.decode(video);
+      }
       Scan._decoding = false;
       if (result && Scan.cameraRunning) onBarcodeFound(result.getText());
     } catch (e) {
       Scan._decoding = false;
       // NotFoundException fires on every blank frame — expected, do not log.
-      // Any other error means a real problem; log name + message to console.
       if (e && e.name && e.name !== 'NotFoundException') {
         console.warn('[ZXing] decode error:', e.name, e.message);
       }
@@ -2997,8 +3060,10 @@ function scanFrameTick() {
 // ── Called when a barcode value is successfully decoded ───────────────────
 function onBarcodeFound(val) {
   val = (val || '').trim();  // strip stray whitespace / newlines from raw barcode bytes
-  $('scan-cam-status').textContent = '✅ Barcode: ' + val;
   stopCamera();
+  // Set status AFTER stopCamera() — stopCamera clears scan-cam-status,
+  // so writing it before would make the confirmation message disappear immediately.
+  $('scan-cam-status').textContent = '✅ Barcode: ' + val;
   $('scan-order-input').value = val;
   scanLookup(val);
 }
@@ -3007,6 +3072,7 @@ function stopCamera() {
   if (Scan.scanTimer)    { clearInterval(Scan.scanTimer); Scan.scanTimer = null; }
   if (Scan.cameraStream) { Scan.cameraStream.getTracks().forEach(t => t.stop()); Scan.cameraStream = null; }
   if (Scan.zxingReader)  { try { Scan.zxingReader.reset(); } catch (_) {} Scan.zxingReader = null; }
+  Scan.decodeCanvas = null;
 
   const video = $('scan-video');
   video.srcObject      = null;
@@ -3018,6 +3084,7 @@ function stopCamera() {
   Scan.cameraRunning   = false;
   Scan.cameraDetector  = null;
   Scan._decoding       = false;
+  Scan._tickCount      = 0;
 }
 
 // Stop camera when leaving scan screen
