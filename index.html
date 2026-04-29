@@ -1479,6 +1479,8 @@ const I18N = {
     'stat.tpls':'\u6a21\u677f\u6570','stat.elems':'\u5143\u7d20\u603b\u6570','stat.vars':'\u53d8\u91cf\u5b57\u6bb5',
     'dsgn.back':'\u2190 \u8fd4\u56de','tpl.placeholder':'\u6a21\u677f\u540d\u79f0\u2026',
     'dsgn.import':'\u2193 \u5bfc\u5165 ZPL','dsgn.preview':'\ud83d\udc41 ZPL \u9884\u89c8','dsgn.save':'\ud83d\udcbe \u4fdd\u5b58\u6a21\u677f',
+    'dsgn.sku':'\u5173\u8054 SKU:','dsgn.sku.ph':'\u5982 DUR-AA-4PK',
+    'home.card4.title':'\u626b\u63cf\u6253\u5370','home.card4.desc':'\u626b\u63cf\u8ba2\u5355\u6761\u7801\u4ee5\u81ea\u52a8\u586b\u5145\u6a21\u677f\u5e76\u7acb\u5373\u6253\u5370',
     'lbl.size':'\u6807\u7b7e\u5c3a\u5bf8\uff08\u70b9\uff09','lbl.width':'\u5bbd\u5ea6','lbl.height':'\u9ad8\u5ea6',
     'lbl.preset':'\u9884\u8bbe\u5c3a\u5bf8','lbl.custom':'\u2014 \u81ea\u5b9a\u4e49 \u2014',
     'lbl.dpi':'203 DPI \u2192 8 \u70b9/\u6beb\u7c73<br>600\u00d7400 \u2248 75\u00d750 \u6beb\u7c73',
@@ -2095,6 +2097,7 @@ function moveElem(id, dir) {
   if (i < 0) return;
   const j = i + dir;
   if (j < 0 || j >= S.elems.length) return;
+  pushHistory();
   // Swap Y coordinates so elements physically move on the label canvas
   // and the generated ZPL ^FO positions reflect the new layout.
   const tmpY    = S.elems[i].y;
@@ -2107,6 +2110,7 @@ function moveElem(id, dir) {
 
 function changeType(newType) {
   const e = S.elems.find(x => x.id === S.selId); if (!e) return;
+  pushHistory();
   e.type = newType;
   // Apply sensible defaults for type-specific fields
   const d = defElem(newType);
@@ -2123,6 +2127,7 @@ function changeType(newType) {
 
 function upd(key, val) {
   const e=S.elems.find(x=>x.id===S.selId); if(!e) return;
+  pushHistory();
   e[key]=val;
   // TEXT block height always tracks fontH so canvas matches ZPL output
   if(key==='fontH' && e.type==='TEXT') { e.height=val; if($('p-h')) $('p-h').value=val; }
@@ -2131,6 +2136,7 @@ function upd(key, val) {
 
 function toggleVar(checked) {
   const e=S.elems.find(x=>x.id===S.selId); if(!e) return;
+  pushHistory();
   e.isVariable=checked;
   $('pr-varname').style.display=checked?'':'none';
   rCanvas(); rTable();
@@ -2264,7 +2270,9 @@ function parseZPL(zplText) {
 
     // ── Type-specific parameters ────────────────────────────
     let fontH = 30, fontW = 30, height = 60, width = 200;
-    let orientation = 'N', thickness = 3, magnification = 4, showValue = true;
+    let orientation = 'N', thickness = 3, magnification = 4;
+    // 1D barcodes default to showValue:true (matches defElem); regex overrides when present.
+    let showValue = ['CODE128','EAN13','UPCA'].includes(type);
 
     switch (type) {
       case 'TEXT': {
@@ -2346,6 +2354,9 @@ function doImportZPL() {
   // Apply parsed label dimensions
   if (result.labelWidth)  { $('lbl-w').value = result.labelWidth; }
   if (result.labelHeight) { $('lbl-h').value = result.labelHeight; }
+
+  // Snapshot current state so the import can be undone in one step.
+  pushHistory();
 
   // Replace canvas elements; maintain S.nextId so new elements added
   // after import don't collide with imported IDs.
