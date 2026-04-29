@@ -847,7 +847,7 @@ body.zh-mode [data-lang="zh"]{display:revert;}
         </div>
         <div id="scan-cam-status"></div>
         <button class="btn btn-secondary btn-sm" id="scan-camera-btn" onclick="toggleCamera()" data-i18n="scan.cam.start">▶ Start Camera</button>
-        <div id="no-barcode-api" class="no-barcode-api" style="display:none;" data-i18n="scan.cam.noapi">BarcodeDetector not supported — use Chrome / Edge 90+ for camera scanning.</div>
+        <div id="no-barcode-api" class="no-barcode-api" style="display:none;" data-i18n="scan.cam.noapi">Camera scanning requires HTTPS and a supported browser (Chrome / Edge 90+, iOS Safari 17+). Use the manual entry below as an alternative.</div>
       </div>
 
       <!-- Manual / USB scanner -->
@@ -923,7 +923,7 @@ body.zh-mode [data-lang="zh"]{display:revert;}
 </div><!-- #screen-scan -->
 
 <!-- Import ZPL Modal -->
-<div id="import-modal-bg">
+<div id="import-modal-bg" onclick="if(event.target===this)closeImportModal()">
   <div id="import-modal">
     <div id="iml-hdr">
       <h3 data-i18n="imp.title">↓ Import from Raw ZPL Code</h3>
@@ -947,7 +947,7 @@ body.zh-mode [data-lang="zh"]{display:revert;}
 </div>
 
 <!-- ZPL Preview Modal -->
-<div id="zpl-modal-bg">
+<div id="zpl-modal-bg" onclick="if(event.target===this)closeModal()">
   <div id="zpl-modal">
     <div id="zml-hdr">
       <h3>ZPL Preview — Designer</h3>
@@ -1361,6 +1361,9 @@ body.zh-mode [data-lang="zh"]{display:revert;}
 
 <div class="toast" id="toast"></div>
 
+<!-- ZXing barcode library — loaded BEFORE main script so hasZX check is reliable on slow mobile connections -->
+<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+
 <!-- ═══════════════════════════════════════════
      JAVASCRIPT — all app logic
 ═══════════════════════════════════════════ -->
@@ -1442,6 +1445,8 @@ const I18N = {
     'toast.noZPL':'\u26a0\ufe0f Generate ZPL first.',
     'toast.imported':'\u2193 Imported {n} element from ZPL',
     'toast.imported.pl':'\u2193 Imported {n} elements from ZPL',
+    'toast.quota':'\u26a0\ufe0f Storage full. Delete old templates to save new ones.',
+    'toast.savefail':'\u26a0\ufe0f Failed to save template to local storage.',
     'dyn.selFirst':'Select a template first.',
     'dyn.pasteFirst':'\u26a0 Paste ZPL first.',
     'dyn.noVar':'No variable fields in this template.<br>Click <b>Generate ZPL</b> directly.',
@@ -1451,7 +1456,7 @@ const I18N = {
     'scan.title':'📷 Scan & Print','scan.desc':'Scan or type an order number → auto-fill template variables → print',
     'scan.cam.title':'① Camera Scanner','scan.cam.hint':'Click Start Camera to scan a barcode',
     'scan.cam.start':'▶ Start Camera','scan.cam.stop':'⏹ Stop Camera',
-    'scan.cam.noapi':'Camera scanning is not supported in this browser. Please use the manual/USB entry below.',
+    'scan.cam.noapi':'Camera scanning requires HTTPS and a supported browser (Chrome 90+, iOS Safari 17+). Use the manual entry below instead.',
     'scan.usb.title':'② Type / USB Scanner','scan.usb.ph':'Order No. — e.g. ORD-001',
     'scan.usb.hint':'Sample orders: ORD-001 · ORD-002 · ORD-003 · ORD-004 · ORD-005',
     'scan.status.idle':'Scan or enter an order number to begin.',
@@ -1538,6 +1543,8 @@ const I18N = {
     'toast.noZPL':'\u26a0\ufe0f \u8bf7\u5148\u751f\u6210 ZPL\u3002',
     'toast.imported':'\u2193 \u5df2\u4ece ZPL \u5bfc\u5165 {n} \u4e2a\u5143\u7d20',
     'toast.imported.pl':'\u2193 \u5df2\u4ece ZPL \u5bfc\u5165 {n} \u4e2a\u5143\u7d20',
+    'toast.quota':'\u26a0\ufe0f \u5b58\u50a8\u7a7a\u95f4\u5df2\u6ee1\uff0c\u8bf7\u5220\u9664\u65e7\u6a21\u677f\u540e\u518d\u4fdd\u5b58\u3002',
+    'toast.savefail':'\u26a0\ufe0f \u6a21\u677f\u4fdd\u5b58\u5931\u8d25\uff0c\u8bf7\u68c0\u67e5\u6d4f\u89c8\u5668\u5b58\u50a8\u8bbe\u7f6e\u3002',
     'dyn.selFirst':'\u8bf7\u5148\u9009\u62e9\u6a21\u677f\u3002',
     'dyn.pasteFirst':'\u26a0 \u8bf7\u5148\u7c98\u8d34 ZPL \u4ee3\u7801\u3002',
     'dyn.noVar':'\u6b64\u6a21\u677f\u4e2d\u6ca1\u6709\u53d8\u91cf\u5b57\u6bb5\u3002<br>\u76f4\u63a5\u70b9\u51fb<b>\u751f\u6210 ZPL</b>\u3002',
@@ -1547,7 +1554,7 @@ const I18N = {
     'scan.title':'📷 扫描打印','scan.desc':'扫描或输入订单号 → 自动填写模板变量 → 打印',
     'scan.cam.title':'① 摄像头扫描','scan.cam.hint':'点击"启动摄像头"扫描条码',
     'scan.cam.start':'▶ 启动摄像头','scan.cam.stop':'⏹ 停止摄像头',
-    'scan.cam.noapi':'此浏览器不支持摄像头扫描，请使用下方手动/USB 扫描枪输入。',
+    'scan.cam.noapi':'摄像头扫描需要 HTTPS 及支持的浏览器（Chrome 90+、iOS Safari 17+），请使用下方手动输入。',
     'scan.usb.title':'② 手动/USB 扫描枪','scan.usb.ph':'订单号，如 ORD-001',
     'scan.usb.hint':'示例订单：ORD-001 · ORD-002 · ORD-003 · ORD-004 · ORD-005',
     'scan.status.idle':'扫描或输入订单号开始。',
@@ -1757,7 +1764,10 @@ function setHelpTab(tab) {
 function getTpls() {
   try { return JSON.parse(localStorage.getItem('zpl_tpls')||'[]'); } catch { return []; }
 }
-function setTpls(t) { localStorage.setItem('zpl_tpls', JSON.stringify(t)); }
+function setTpls(t) {
+  try { localStorage.setItem('zpl_tpls', JSON.stringify(t)); }
+  catch(e) { toast(e.name==='QuotaExceededError' ? T('toast.quota') : T('toast.savefail')); }
+}
 
 // ─── STATS (Home) ─────────────────────────────────────────────
 function updateStats() {
@@ -2806,6 +2816,12 @@ async function startCamera() {
   const finder = $('scan-finder');
   const camSt  = $('scan-cam-status');
 
+  // Bug fix: navigator.mediaDevices is undefined on non-HTTPS (HTTP) pages
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    camSt.textContent = '❌ Camera requires a secure HTTPS connection.';
+    return;
+  }
+
   const hasBD = 'BarcodeDetector' in window;
   const hasZX = typeof ZXing !== 'undefined';
 
@@ -2818,21 +2834,22 @@ async function startCamera() {
 
   try {
     if (hasBD) {
-      // ── Path A: BarcodeDetector (Chrome / Edge / Android Chrome) ──────────
+      // ── Path A: BarcodeDetector (Chrome / Edge / Android Chrome / Safari 17+) ──
+      // Bug fix: use {ideal:'environment'} not the string 'environment' — the string
+      // form is treated as {exact:'environment'} which throws OverconstrainedError on
+      // devices where the back camera label doesn't exactly match (common on Android).
       Scan.cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
+        video: { facingMode: {ideal:'environment'}, width: {ideal:1280}, height: {ideal:720} }
       });
       video.srcObject = Scan.cameraStream;
 
-      // Wait for video to actually start playing, not just for play() to be called.
-      // play() on mobile returns a promise that resolves when playback STARTS, but
-      // readyState may still be < 2 at that point. The 'playing' event fires only
-      // after the first frame is decoded — that's when detect() will succeed.
+      // Wait for the first frame. 'playing' fires after the first decoded frame —
+      // that's when readyState >= 2 and BarcodeDetector.detect() will succeed.
       await new Promise((resolve, reject) => {
         video.addEventListener('playing', resolve, { once: true });
         video.addEventListener('error', () => reject(new Error('Video element error')), { once: true });
         video.play().catch(reject);
-        setTimeout(() => reject(new Error('Camera timed out — no video after 8 s')), 8000);
+        setTimeout(() => reject(new Error('Camera timed out — no video after 10 s')), 10000);
       });
 
       video.style.display = 'block';
@@ -2850,49 +2867,58 @@ async function startCamera() {
 
     } else {
       // ── Path B: ZXing-js (iOS Safari, Firefox, older browsers) ───────────
-      // IMPORTANT: decodeFromVideoDevice() resolves only when the FIRST barcode
-      // is detected — never await it. Show the camera UI via the 'playing' event
-      // instead, which fires as soon as the video feed becomes visible.
+      // Bug fix 1: Don't enumerate devices to find back camera — on iOS, device
+      // labels are empty strings until AFTER permission is granted, so the
+      // /back|rear|environment/ regex never matches and we get the front camera.
+      // Instead, pass facingMode:{ideal:'environment'} directly as a constraint.
+      //
+      // Bug fix 2: Show camera UI via 'playing' event WITH a 4 s timeout fallback —
+      // some iOS versions don't reliably fire 'playing' on the injected srcObject.
       Scan.zxingReader = new ZXing.BrowserMultiFormatReader();
 
-      video.addEventListener('playing', () => {
-        video.style.display = 'block';
-        ph.style.display     = 'none';
-        finder.style.display = '';
-        btn.textContent      = T('scan.cam.stop') || '⏹ Stop Camera';
-        Scan.cameraRunning   = true;
-        camSt.textContent    = '🎥 Camera active — point barcode at the finder box';
-      }, { once: true });
+      // Show camera UI when video starts playing (or after 4 s fallback)
+      const showCameraUI = () => {
+        if (Scan.cameraRunning) return; // already shown
+        video.style.display  = 'block';
+        ph.style.display      = 'none';
+        finder.style.display  = '';
+        btn.textContent       = T('scan.cam.stop') || '⏹ Stop Camera';
+        Scan.cameraRunning    = true;
+        camSt.textContent     = '🎥 Camera active — point barcode at the finder box';
+      };
+      video.addEventListener('playing', showCameraUI, { once: true });
+      setTimeout(showCameraUI, 4000); // fallback if 'playing' never fires
 
-      // Prefer environment-facing (back) camera on mobile
-      let deviceId;
-      try {
-        const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
-        const back    = devices.find(d => /back|rear|environment/i.test(d.label));
-        deviceId      = back ? back.deviceId : (devices[devices.length - 1]?.deviceId);
-      } catch (_) { /* deviceId stays undefined — browser picks default */ }
-
-      // Fire-and-forget — ZXing manages the stream and calls the callback for every frame.
-      // ZXing.NotFoundException fires on every empty frame and is safe to ignore.
-      Scan.zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
-        if (result && Scan.cameraRunning) {
-          const val = result.getText();
-          $('scan-cam-status').textContent = '✅ Barcode: ' + val;
-          stopCamera();
-          $('scan-order-input').value = val;
-          scanLookup(val);
+      // Use constraints-based API to reliably select back camera on mobile.
+      // ZXing.NotFoundException fires on every empty frame — safe to ignore.
+      Scan.zxingReader.decodeFromConstraints(
+        { video: { facingMode: {ideal:'environment'}, width: {ideal:1280}, height: {ideal:720} } },
+        video,
+        (result, err) => {
+          if (result && Scan.cameraRunning) {
+            const val = result.getText();
+            $('scan-cam-status').textContent = '✅ Barcode: ' + val;
+            stopCamera();
+            $('scan-order-input').value = val;
+            scanLookup(val);
+          }
         }
-      }).catch(e => {
+      ).catch(e => {
         camSt.textContent  = '❌ Camera error: ' + (e.message || e);
         Scan.cameraRunning = false;
       });
 
-      // Show interim status while ZXing initialises the stream
       btn.textContent   = T('scan.cam.stop') || '⏹ Stop Camera';
       camSt.textContent = '📷 Starting camera…';
     }
   } catch (e) {
-    camSt.textContent = '❌ Camera error: ' + e.message;
+    // Provide a more helpful message for common mobile errors
+    const msg = e.name === 'NotAllowedError'  ? '❌ Camera permission denied. Allow camera access in browser settings.'
+              : e.name === 'NotFoundError'     ? '❌ No camera found on this device.'
+              : e.name === 'NotReadableError'  ? '❌ Camera in use by another app.'
+              : e.name === 'OverconstrainedError' ? '❌ Camera constraint error — try refreshing.'
+              : '❌ Camera error: ' + e.message;
+    camSt.textContent = msg;
     Scan.cameraRunning = false;
   }
 }
@@ -2957,7 +2983,5 @@ updateStats();
 updateDPIHint();
 </script>
 
-<!-- ZXing barcode library — fallback for iOS Safari / Firefox where BarcodeDetector is unavailable -->
-<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 </body>
 </html>
