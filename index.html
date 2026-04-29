@@ -1012,7 +1012,7 @@ const I18N = {
     'scan.title':'📷 Scan & Print','scan.desc':'Scan or type an order number → auto-fill template variables → print',
     'scan.cam.title':'① Camera Scanner','scan.cam.hint':'Click Start Camera to scan a barcode',
     'scan.cam.start':'▶ Start Camera','scan.cam.stop':'⏹ Stop Camera',
-    'scan.cam.noapi':'BarcodeDetector not supported — use Chrome / Edge 90+ for camera scanning.',
+    'scan.cam.noapi':'Camera scanning is not supported in this browser. Please use the manual/USB entry below.',
     'scan.usb.title':'② Type / USB Scanner','scan.usb.ph':'Order No. — e.g. ORD-001',
     'scan.usb.hint':'Sample orders: ORD-001 · ORD-002 · ORD-003 · ORD-004 · ORD-005',
     'scan.status.idle':'Scan or enter an order number to begin.',
@@ -1104,7 +1104,7 @@ const I18N = {
     'scan.title':'📷 扫描打印','scan.desc':'扫描或输入订单号 → 自动填写模板变量 → 打印',
     'scan.cam.title':'① 摄像头扫描','scan.cam.hint':'点击"启动摄像头"扫描条码',
     'scan.cam.start':'▶ 启动摄像头','scan.cam.stop':'⏹ 停止摄像头',
-    'scan.cam.noapi':'此浏览器不支持 BarcodeDetector，请使用 Chrome/Edge 90+ 进行摄像头扫描。',
+    'scan.cam.noapi':'此浏览器不支持摄像头扫描，请使用下方手动/USB 扫描枪输入。',
     'scan.usb.title':'② 手动/USB 扫描枪','scan.usb.ph':'订单号，如 ORD-001',
     'scan.usb.hint':'示例订单：ORD-001 · ORD-002 · ORD-003 · ORD-004 · ORD-005',
     'scan.status.idle':'扫描或输入订单号开始。',
@@ -2313,6 +2313,13 @@ function clearScanOrderBanner() {
 }
 
 // ── Camera scanning ────────────────────────────────────────────
+// Strategy:
+//   1. BarcodeDetector (Chrome / Edge 90+, Android Chrome) — fastest
+//   2. ZXing-js fallback (iOS Safari, Firefox, older Android)
+// Bugs fixed vs original:
+//   • video.play() was never called → readyState stayed < 2 on mobile → detect() never ran
+//   • No throttle → detect() called 60×/sec, overloading mobile CPU
+//   • BarcodeDetector not available on iOS/Firefox → camera silently refused to open
 async function toggleCamera() {
   if (Scan.cameraRunning) { stopCamera(); return; }
   await startCamera();
@@ -2325,59 +2332,113 @@ async function startCamera() {
   const finder = $('scan-finder');
   const camSt  = $('scan-cam-status');
 
-  if (!('BarcodeDetector' in window)) {
+  const hasBD = 'BarcodeDetector' in window;
+  const hasZX = typeof ZXing !== 'undefined';
+
+  if (!hasBD && !hasZX) {
     $('no-barcode-api').style.display = '';
     return;
   }
-  try {
-    Scan.cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
-    });
-    video.srcObject = Scan.cameraStream;
-    video.style.display = 'block';
-    ph.style.display     = 'none';
-    finder.style.display = '';
-    btn.textContent      = T('scan.cam.stop') || '⏹ Stop Camera';
-    Scan.cameraRunning   = true;
-    camSt.textContent    = '🎥 Camera active — point at barcode';
 
-    Scan.cameraDetector = new BarcodeDetector({
-      formats: ['qr_code','code_128','code_39','ean_13','ean_8','upc_a','upc_e','data_matrix','pdf417','aztec']
-    });
-    scanFrame();
+  camSt.textContent = '📷 Starting camera…';
+
+  try {
+    if (hasBD) {
+      // ── Path A: BarcodeDetector (Chrome / Edge / Android Chrome) ──────────
+      Scan.cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
+      });
+      video.srcObject = Scan.cameraStream;
+      // Explicit play() is required on mobile — autoplay attribute alone is not enough
+      await video.play().catch(() => {});
+      video.style.display = 'block';
+      ph.style.display     = 'none';
+      finder.style.display = '';
+      btn.textContent      = T('scan.cam.stop') || '⏹ Stop Camera';
+      Scan.cameraRunning   = true;
+      camSt.textContent    = '🎥 Camera active — point barcode at the finder box';
+
+      Scan.cameraDetector  = new BarcodeDetector({
+        formats: ['qr_code','code_128','code_39','ean_13','ean_8','upc_a','upc_e','data_matrix','pdf417','aztec']
+      });
+      Scan._lastScanTime = 0;
+      scanFrame();
+
+    } else {
+      // ── Path B: ZXing-js (iOS Safari, Firefox, older browsers) ───────────
+      Scan.zxingReader = new ZXing.BrowserMultiFormatReader();
+
+      // Prefer environment-facing (back) camera on mobile
+      let deviceId;
+      try {
+        const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+        const back    = devices.find(d => /back|rear|environment/i.test(d.label));
+        deviceId      = back ? back.deviceId : (devices[devices.length - 1]?.deviceId);
+      } catch (_) { /* deviceId stays undefined — browser picks default */ }
+
+      // ZXing manages the stream itself; pass the video element as the render target
+      await Scan.zxingReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
+        if (result) {
+          const val = result.getText();
+          $('scan-cam-status').textContent = '✅ Barcode: ' + val;
+          stopCamera();
+          $('scan-order-input').value = val;
+          scanLookup(val);
+        }
+        // ZXing.NotFoundException is expected while no barcode is in frame — ignore it
+      });
+
+      video.style.display = 'block';
+      ph.style.display     = 'none';
+      finder.style.display = '';
+      btn.textContent      = T('scan.cam.stop') || '⏹ Stop Camera';
+      Scan.cameraRunning   = true;
+      camSt.textContent    = '🎥 Camera active — point barcode at the finder box';
+    }
   } catch (e) {
     camSt.textContent = '❌ Camera error: ' + e.message;
+    Scan.cameraRunning = false;
   }
 }
 
 function stopCamera() {
-  if (Scan.cameraFrame) { cancelAnimationFrame(Scan.cameraFrame); Scan.cameraFrame = null; }
-  if (Scan.cameraStream) { Scan.cameraStream.getTracks().forEach(t=>t.stop()); Scan.cameraStream = null; }
+  if (Scan.cameraFrame)  { cancelAnimationFrame(Scan.cameraFrame); Scan.cameraFrame = null; }
+  if (Scan.cameraStream) { Scan.cameraStream.getTracks().forEach(t => t.stop()); Scan.cameraStream = null; }
+  if (Scan.zxingReader)  { try { Scan.zxingReader.reset(); } catch (_) {} Scan.zxingReader = null; }
+
   const video = $('scan-video');
-  video.srcObject = null; video.style.display = 'none';
+  video.srcObject      = null;
+  video.style.display  = 'none';
   $('scan-placeholder').style.display = '';
   $('scan-finder').style.display      = 'none';
   $('scan-camera-btn').textContent    = T('scan.cam.start') || '▶ Start Camera';
   $('scan-cam-status').textContent    = '';
-  Scan.cameraRunning = false;
+  Scan.cameraRunning   = false;
+  Scan.cameraDetector  = null;
 }
 
 async function scanFrame() {
   if (!Scan.cameraRunning || !Scan.cameraDetector) return;
   const video = $('scan-video');
-  try {
-    if (video.readyState >= 2) {
-      const codes = await Scan.cameraDetector.detect(video);
-      if (codes.length > 0) {
-        const val = codes[0].rawValue;
-        $('scan-cam-status').textContent = '✅ Barcode: ' + val;
-        stopCamera();
-        $('scan-order-input').value = val;
-        scanLookup(val);
-        return;
+  const now   = Date.now();
+
+  // Throttle to 5 fps — detect() is async and expensive; 60 fps calls pile up on mobile
+  if (now - (Scan._lastScanTime || 0) >= 200) {
+    Scan._lastScanTime = now;
+    try {
+      if (video.readyState >= 2) {
+        const codes = await Scan.cameraDetector.detect(video);
+        if (codes.length > 0) {
+          const val = codes[0].rawValue;
+          $('scan-cam-status').textContent = '✅ Barcode: ' + val;
+          stopCamera();
+          $('scan-order-input').value = val;
+          scanLookup(val);
+          return;
+        }
       }
-    }
-  } catch (_) { /* frame not ready */ }
+    } catch (_) { /* frame not ready or detect failed — continue loop */ }
+  }
   Scan.cameraFrame = requestAnimationFrame(scanFrame);
 }
 
@@ -2399,5 +2460,8 @@ updateStats();
 // Initialise DPI selector + hint
 updateDPIHint();
 </script>
+
+<!-- ZXing barcode library — fallback for iOS Safari / Firefox where BarcodeDetector is unavailable -->
+<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 </body>
 </html>
