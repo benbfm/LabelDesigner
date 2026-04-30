@@ -2191,6 +2191,7 @@ Screens:
         Control: CheckBox
         Properties:
           AccessibleLabel: =If(gblLang="EN","Show human-readable value below barcode","在条码下显示人类可读数值")
+          Text: =If(gblLang="EN","Show Value Below Barcode","在条码下显示数值")
           Height: =28
           OnCheck: |
             =Patch(colElements, LookUp(colElements, id = gblSelectedElem.id), {showValue: true});
@@ -2270,6 +2271,7 @@ Screens:
         Control: CheckBox
         Properties:
           AccessibleLabel: =If(gblLang="EN","Mark as variable field","标记为变量字段")
+          Text: =If(gblLang="EN","Mark as Variable","标记为变量")
           Height: =28
           OnCheck: |
             =Patch(colElements, LookUp(colElements, id = gblSelectedElem.id), {isVariable: true});
@@ -3148,9 +3150,13 @@ Screens:
               FontWeight: =FontWeight.SemiBold
               Height: =30
               OnSelect: |
-                =Remove(ZPL_LabelTemplates, ThisItem);
-                ClearCollect(colTemplates, ZPL_LabelTemplates);
-                Set(gblMsg, {type: "success", text: If(gblLang="EN","Deleted.","已删除。")})
+                =If(
+                  CountRows(colTemplates) <= 1,
+                  Set(gblMsg, {type: "warning", text: If(gblLang="EN","Cannot delete the last template.","无法删除最后一个模板。")}),
+                  Remove(ZPL_LabelTemplates, ThisItem);
+                  ClearCollect(colTemplates, ZPL_LabelTemplates);
+                  Set(gblMsg, {type: "success", text: If(gblLang="EN","Deleted.","已删除。")})
+                )
               Text: =If(gblLang="EN","Delete","删除")
               Width: =58
               X: =132
@@ -3828,7 +3834,7 @@ Screens:
           OnSelect: |
             =If(IsBlank(gblZPLOutput),
               Set(gblMsg, {type: "warning", text: If(gblLang="EN","Generate ZPL first.","请先生成 ZPL。")}),
-              If(IsBlank(TxtIn_PrinterURL.Text),
+              If(IsBlank(Trim(TxtIn_PrinterURL.Text)),
                 Set(gblMsg, {type: "warning", text: If(gblLang="EN","Enter printer URL.","请输入打印机地址。")}),
                 Set(gblPrintResult, ZebraPrint_Flow.Run(TxtIn_PrinterURL.Text, gblZPLOutput));
                 If(gblPrintResult.statusCode = 200 || gblPrintResult.statusCode = 204,
@@ -4538,14 +4544,18 @@ Screens:
           FontWeight: =FontWeight.SemiBold
           Height: =48
           OnSelect: |
-            =Set(gblActivePrintTpl, gblMatchedScanTpl);
-            Set(gblPrintTplId, gblMatchedScanTpl.ID);
-            ClearCollect(colPrintVals,
-              ForAll(colScanVarMap, {varName: varName, value: value}));
-            Set(gblFromScan, true);
-            Navigate(PrintScreen, ScreenTransition.Fade)
-          Text: =If(gblLang="EN","Proceed to Print  →","前往打印  →")
-          Visible: =gblScanStatus = "found"
+            =If(gblScanStatus = "no_template",
+              Navigate(LibraryScreen, ScreenTransition.Fade),
+              Set(gblActivePrintTpl, gblMatchedScanTpl);
+              Set(gblPrintTplId, gblMatchedScanTpl.ID);
+              ClearCollect(colPrintVals,
+                ForAll(colScanVarMap, {varName: varName, value: value}));
+              Set(gblFromScan, true);
+              Navigate(PrintScreen, ScreenTransition.Fade))
+          Text: =If(gblScanStatus = "no_template",
+            If(gblLang="EN","Go to Templates →","前往模板库 →"),
+            If(gblLang="EN","Proceed to Print  →","前往打印  →"))
+          Visible: =gblScanStatus = "found" || gblScanStatus = "no_template"
           Width: =Parent.Width - 710
           X: =610
           Y: =Parent.Height - 110
@@ -4733,9 +4743,9 @@ Screens:
           Font: =Font.'Segoe UI'
           Height: =30
           OnSelect: =Set(gblLang, If(gblLang="EN","ZH","EN"))
-          Text: =If(gblLang="EN","中文","EN")
-          Width: =60
-          X: =Parent.Width - 72
+          Text: =If(gblLang="EN","ZH 中文","EN English")
+          Width: =80
+          X: =Parent.Width - 92
           Y: =9
 
     # ── Section tab buttons ──────────────────────────────────────────────────
