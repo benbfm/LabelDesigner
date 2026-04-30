@@ -1435,7 +1435,10 @@ const I18N = {
     'prt.send.noURL':'\u26a0 Enter a printer URL first.',
     'prt.send.sending':'Sending\u2026',
     'prt.send.ok':'\u2705 Sent successfully!',
+    'prt.send.sent':'\u2705 Sent \u2014 no confirmation available for raw TCP printers.',
     'prt.send.err':'\u274c Could not reach printer. Check URL and network.',
+    'confirm.lastTpl':'\u26a0\ufe0f Cannot delete the last template.',
+    'scan.tpl.matched':'Template matched: ',
     'zpl.ph':'ZPL code appears here after clicking Generate ZPL\u2026',
     'imp.title':'\u2193 Import from Raw ZPL Code','imp.close':'\u2715 Close',
     'imp.cancel':'Cancel','imp.parse':'Parse &amp; Import \u2192',
@@ -1533,7 +1536,10 @@ const I18N = {
     'prt.send.noURL':'\u26a0 \u8bf7\u8f93\u5165\u6253\u5370\u673a URL\u3002',
     'prt.send.sending':'\u53d1\u9001\u4e2d\u2026',
     'prt.send.ok':'\u2705 \u53d1\u9001\u6210\u529f\uff01',
+    'prt.send.sent':'\u2705 \u5df2\u53d1\u9001 \u2014 \u539f\u59cb TCP \u6253\u5370\u673a\u65e0\u6cd5\u786e\u8ba4\u6536\u5230\u3002',
     'prt.send.err':'\u274c \u65e0\u6cd5\u8fde\u63a5\u6253\u5370\u673a\uff0c\u8bf7\u68c0\u67e5 URL \u548c\u7f51\u7edc\u3002',
+    'confirm.lastTpl':'\u26a0\ufe0f \u65e0\u6cd5\u5220\u9664\u6700\u540e\u4e00\u4e2a\u6a21\u677f\u3002',
+    'scan.tpl.matched':'\u5df2\u5339\u914d\u6a21\u677f\uff1a',
     'zpl.ph':'\u70b9\u51fb\u201c\u751f\u6210 ZPL\u201d\u540e\uff0cZPL \u4ee3\u7801\u5c06\u663e\u793a\u5728\u6b64\u5904\u2026',
     'imp.title':'\u2193 \u4ece\u539f\u59cb ZPL \u4ee3\u7801\u5bfc\u5165','imp.close':'\u2715 \u5173\u95ed',
     'imp.cancel':'\u53d6\u6d88','imp.parse':'\u89e3\u6790\u5e76\u5bfc\u5165 \u2192',
@@ -1628,8 +1634,8 @@ const S = {
 };
 
 // ─── VERSION ─────────────────────────────────────────────────
-const APP_VERSION = 'v1.26';   // bump this whenever a new build is deployed
-const APP_DATE    = '2026-04-29';
+const APP_VERSION = 'v1.27';   // bump this whenever a new build is deployed
+const APP_DATE    = '2026-04-30';
 
 // ─── HELPERS ─────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -1658,7 +1664,7 @@ function pushHistory() {
   // Truncate any redo future, then push snapshot
   S.history = S.history.slice(0, S.historyIdx + 1);
   S.history.push({ elems: JSON.parse(JSON.stringify(S.elems)), selId: S.selId });
-  if (S.history.length > 60) S.history.shift();
+  if (S.history.length > 60) { S.history.shift(); S.historyIdx--; }
   S.historyIdx = S.history.length - 1;
   _syncUndoUI();
 }
@@ -1836,9 +1842,9 @@ function loadTpl(id) {
 function delTpl(id) {
   if (!confirm(T('confirm.delTpl'))) return;
   const remaining = getTpls().filter(t => t.id !== id);
-  if (!remaining.length) { toast('⚠️ Cannot delete the last template.'); return; }
+  if (!remaining.length) { toast(T('confirm.lastTpl')); return; }
   setTpls(remaining);
-  if (S.tplId === id) S.tplId = null;
+  if (S.tplId === id) { S.tplId = null; newTpl(); }
   rLib();
   toast(T('toast.deleted'));
 }
@@ -2508,7 +2514,7 @@ function updateLabelaryPreview(zpl, tpl) {
   const wIn = (tpl.width  / S.dpi).toFixed(4).replace(',', '.');
   const hIn = (tpl.height / S.dpi).toFixed(4).replace(',', '.');
   const encodedZPL = encodeURIComponent(zpl);
-  const url = `http://api.labelary.com/v1/printers/${dpmm}/labels/${wIn}x${hIn}/0/${encodedZPL}`;
+  const url = `https://api.labelary.com/v1/printers/${dpmm}/labels/${wIn}x${hIn}/0/${encodedZPL}`;
 
   empty.style.display = 'none';
   err.style.display = 'none';
@@ -2557,7 +2563,7 @@ function loadPrintTpl() {
       <label>${esc(e.variableName)}
         <span style="font-weight:400;color:var(--text2);">(${tLbl[e.type]||e.type})</span>
       </label>
-      <input type="text" id="vf-${esc(e.variableName)}"
+      <input type="text" id="vf-${e.variableName.replace(/"/g,'&quot;')}"
         placeholder="${e.content?'Default: '+esc(e.content):'Enter value…'}"
         value="${esc(e.content||'')}">
     </div>`).join('');
@@ -2589,7 +2595,7 @@ function genZPL() {
 function copyZPL() {
   const t=$('zpl-ta').value;
   if (!t) { toast(T('toast.noZPL')); return; }
-  navigator.clipboard.writeText(t); toast(T('toast.clipbd'));
+  navigator.clipboard.writeText(t).then(() => toast(T('toast.clipbd'))).catch(err => toast('❌ Copy failed: ' + err.message));
 }
 
 function dlZPL() {
@@ -2598,15 +2604,16 @@ function dlZPL() {
   const id=$('print-sel').value;
   const name=(getTpls().find(x=>x.id===id)?.name||'label').replace(/[^a-z0-9]/gi,'_');
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));
+  const blobUrl = URL.createObjectURL(new Blob([t],{type:'text/plain'}));
+  a.href=blobUrl;
   a.download=name+'.zpl'; a.click();
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
   toast(T('toast.dlzpl'));
 }
 
 function sendToPrinter() {
   const zpl = $('zpl-ta').value.trim();
   const url = $('printer-url').value.trim();
-  const st  = $('send-status');
 
   if (!zpl) { showSendStatus(T('prt.send.noZPL'), 'err'); return; }
   if (!url)  { showSendStatus(T('prt.send.noURL'), 'err'); return; }
@@ -2625,8 +2632,9 @@ function sendToPrinter() {
     }
   })
   .catch(() => {
-    // status 0 / CORS means the printer received it but returned no HTTP response — common for raw TCP ports
-    showSendStatus(T('prt.send.ok'), 'ok');
+    // CORS / status 0 is normal for raw Zebra TCP ports — browser blocks the response but the data was sent.
+    // Show a neutral confirmation so the operator knows the command was dispatched without implying verified delivery.
+    showSendStatus(T('prt.send.sent'), 'ok');
   });
 }
 
@@ -2717,7 +2725,7 @@ function scanLookup(orderNum) {
   }
 
   Scan.tpl = tpl;
-  $('scan-tpl-name').textContent = 'Template matched: ' + tpl.name;
+  $('scan-tpl-name').textContent = (T('scan.tpl.matched') || 'Template matched: ') + tpl.name;
   $('scan-tpl-banner').style.display = '';
 
   // Auto-map variables
@@ -2947,7 +2955,7 @@ async function startCamera() {
       await new Promise(resolve => {
         const deadline = Date.now() + 2000;
         (function poll() {
-          if (video.currentTime > 0 || Date.now() >= deadline) return resolve();
+          if (video.currentTime > 0 || Date.now() >= deadline || !Scan.cameraRunning) return resolve();
           requestAnimationFrame(poll);
         })();
       });
